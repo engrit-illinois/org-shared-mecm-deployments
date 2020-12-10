@@ -132,7 +132,7 @@ Default is `$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1`.
 
 # Report-UnnecessaryDirectDeployments.psm1
 
-This module looks through the org's standardized deployment collections, notes the deployments, and reports any extraneous collections/deployments which are found to deuplicate the standardized ones. The idea is to limit the number of one-off deployments of the same apps, to limit the overall number of deployments and thus limit time spent troubleshooting broken deployments.  
+This module looks through the org's standardized deployment collections, notes the deployments, and reports any deployments of the same apps which are directly deployed to other collections, and which collections. The idea is to limit the number of duplicated one-off deployments, to limit the overall number of deployments and thus limit time spent troubleshooting broken deployments.  
 
 ### Example usage
 
