@@ -130,5 +130,40 @@ Optional string. Recommend leaving default.
 The path to the ConfigurationManager Powershell module installed on the local machine (as part of the admin console).  
 Default is `$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1`.  
 
+# Report-UnnecessaryDirectDeployments.psm1
+
+This module looks through the org's standardized deployment collections, notes the deployments, and reports any extraneous collections/deployments which are found to deuplicate the standardized ones. The idea is to limit the number of one-off deployments of the same apps, to limit the overall number of deployments and thus limit time spent troubleshooting broken deployments.  
+
+### Example usage
+
+1. Download `Report-UnnecessaryDirectDeployments.psm1`
+2. Import the file as a module: `Import-Module c:\path\to\Report-UnnecessaryDirectDeployments.psm1`
+3. Run it.
+  - e.g. `Report-UnnecessaryDirectDeployments`
+4. Review the generated CSV.
+
+### Parameters
+
+#### -OutputPath
+Optional string.  
+The location where the log and generated CSV will be created.  
+Default path is `c:\engrit\logs`.  
+Output filenames are `Report-UnnecessaryDirectDeployments_<timestamp>.csv/log`.  
+
+#### -SiteCode
+Optional string. Recommend leaving default.  
+The site code of the MECM site to query.  
+Default is `MP0`.  
+
+#### -ProviderMachineName
+Optional string. Recommend leaving default.  
+The SMS provider machine name.  
+Default is `sccmcas.ad.uillinois.edu`.  
+
+#### -CMPSModulePath
+Optional string. Recommend leaving default.  
+The path to the ConfigurationManager Powershell module installed on the local machine (as part of the admin console).  
+Default is `$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1`.  
+
 # Notes
 - By mseng3
