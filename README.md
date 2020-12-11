@@ -76,7 +76,7 @@ Optional string. Recommend leaving default.
 The site code of the MECM site to connect to.  
 Default is `MP0`.  
 
-#### -ProviderMachineName
+#### -Provider
 Optional string. Recommend leaving default.  
 The SMS provider machine name.  
 Default is `sccmcas.ad.uillinois.edu`.  
@@ -120,7 +120,7 @@ Optional string. Recommend leaving default.
 The site code of the MECM site to query.  
 Default is `MP0`.  
 
-#### -ProviderMachineName
+#### -Provider
 Optional string. Recommend leaving default.  
 The SMS provider machine name.  
 Default is `sccmcas.ad.uillinois.edu`.  
@@ -155,7 +155,7 @@ Optional string. Recommend leaving default.
 The site code of the MECM site to query.  
 Default is `MP0`.  
 
-#### -ProviderMachineName
+#### -Provider
 Optional string. Recommend leaving default.  
 The SMS provider machine name.  
 Default is `sccmcas.ad.uillinois.edu`.  
