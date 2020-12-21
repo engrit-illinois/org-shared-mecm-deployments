@@ -3,6 +3,7 @@ A few custom modules and some misc snippets related to maintaining the Engineeri
 
 Org shared deployment model documentation home: https://wiki.illinois.edu/wiki/display/engritprivate/SCCM+-+Org+shared+collections+and+deployments  
 
+Table of contents:  
 - [org-shared-deployments-misc.ps1](#org-shared-deployments-miscps1): handy snippets to perform various tasks relating to the org shared deployments
 - [New-CMOrgModelDeploymentCollection.psm1](#new-cmorgmodeldeploymentcollectionpsm1): a module for creating standardized deployment collections
 - [Get-CollsWhichIncludeColl.psm1](#get-cmcollswhichincludecollpsm1): a module to return the list of collections in which a given collection is included
