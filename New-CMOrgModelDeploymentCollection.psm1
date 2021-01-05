@@ -152,12 +152,12 @@ function New-CMOrgModelDeploymentCollection {
 	function Get-BaseCollName($appName) {
 		$collNamePrefix = "$($Prefix)"
 		if($ISOnly) {
-			$collNamePrefix = "$($Prefix)IS"
+			$collNamePrefix = "$($Prefix)IS "
 		}
 		
-		$collNamePrefixAction = "$collNamePrefix Deploy"
+		$collNamePrefixAction = "$($collNamePrefix)Deploy"
 		if($Uninstall) {
-			$collNamePrefixAction = "$collNamePrefix Uninstall"
+			$collNamePrefixAction = "$($collNamePrefix)Uninstall"
 		}
 		
 		$collNameBase = "$collNamePrefixAction $appName"
