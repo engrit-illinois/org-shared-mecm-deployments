@@ -255,7 +255,12 @@ Get-RevisionOfAssignment "*autocad*"
 
 # -----------------------------------------------------------------------------
 
-# Get the refresh schedules of all MECM device collections, limit them to those that refresh daily, and print them in a table, sorted by refresh time and then by collection name:
+# Get the refresh schedules of all MECM device collections,
+# limit them to those that refresh daily,
+# sort by refresh time and then by collection name,
+# and print them in a table.
+# This will take a while to run.
+
 $colls = Get-CMDeviceCollection
 $collsPruned = $colls | Select Name,@{
 	Name="RecurStartDate"
