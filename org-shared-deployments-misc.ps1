@@ -12,6 +12,87 @@ Exit
 
 # -----------------------------------------------------------------------------
 
+# Prepare a connection to SCCM so you can directly use ConfigurationManager Powershell cmdlets without opening the admin console app
+function Prep-MECM {
+	$SiteCode = "MP0" # Site code 
+	$ProviderMachineName = "sccmcas.ad.uillinois.edu" # SMS Provider machine name
+
+	# Customizations
+	$initParams = @{}
+	#$initParams.Add("Verbose", $true) # Uncomment this line to enable verbose logging
+	#$initParams.Add("ErrorAction", "Stop") # Uncomment this line to stop the script on any errors
+
+	# Import the ConfigurationManager.psd1 module 
+	if((Get-Module ConfigurationManager) -eq $null) {
+		Import-Module "$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams 
+	}
+
+	# Connect to the site's drive if it is not already present
+	if((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue) -eq $null) {
+		New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $ProviderMachineName @initParams
+	}
+
+	# Set the current location to be the site code.
+	Set-Location "$($SiteCode):\" @initParams
+}
+
+# -----------------------------------------------------------------------------
+
+# Use the above Prep-MECM function (which must change your working directory to MP0:\), perform some commands, and return to your previous working directory
+
+$myPWD = $pwd.path
+Prep-MECM
+
+# Some commands, e.g.:
+Get-CMDeviceCollection -Name "UIUC-ENGR-All Systems"
+
+Set-Location $myPWD
+
+# -----------------------------------------------------------------------------
+
+# Find which MECM collections contain a given machine:
+# Note: this will probably take a long time (15+ minutes) to run
+Get-CMCollection | Where { (Get-CMCollectionMember -InputObject $_).Name -contains "machine-name" } | Select Name
+
+# -----------------------------------------------------------------------------
+
+# Force the MECM client to re-evaluate its assignments
+# Useful if deployments just won't show up in Software Center
+# https://github.com/engrit-illinois/force-software-center-assignment-evaluation
+$Assignments = (Get-WmiObject -Namespace root\ccm\Policy\Machine -Query "Select * FROM CCM_ApplicationCIAssignment").AssignmentID
+ForEach ($Assignment in $Assignments) {
+    $Trigger = [wmiclass] "\root\ccm:SMS_Client"
+    $Trigger.TriggerSchedule("$Assignment")
+    Start-Sleep 1
+}
+
+# -----------------------------------------------------------------------------
+
+# Find the difference between two MECM collections:
+$one = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 1" | Select Name).Name
+$two = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 2" | Select Name).Name
+$diff = Compare-Object -ReferenceObject $one -DifferenceObject $two
+$diff
+@($diff).count
+
+# -----------------------------------------------------------------------------
+
+# Get the current/authoritative list of valid ENGR computer name prefixes directly from MECM:
+$rule = (Get-CMDeviceCollectionQueryMembershipRule -Name "UIUC-ENGR-All Systems" -RuleName "UIUC-ENGR-Imported Computers").QueryExpression
+$regex = [regex]'"([a-zA-Z]*)-%"'
+$prefixesFound = $regex.Matches($rule)
+# Make array of prefixes, removing extraneous characters from matches
+$prefixesFinal = @()
+foreach($prefix in $prefixesFound) {
+	# e.g pull "CEE" out of "`"CEE-%`""
+	$prefixClean = $prefix -replace '"',''
+	$prefixClean = $prefixClean -replace '-%',''
+	$prefixesFinal += @($prefixClean)
+}
+$prefixesFinal | Sort-Object
+
+# -----------------------------------------------------------------------------
+
 # Rename a collection
 Get-CMDeviceCollection -Name $coll | Set-CMDeviceCollection -NewName $newname
 
@@ -154,9 +235,55 @@ $apps | Select ApplicationName,UpdateSupersedence
 
 # -----------------------------------------------------------------------------
 
+# Get the revision number of a local MECM assignment named like "*Siemens NX*":
+# Compare the return value with the revision number of the app (as seen in the admin console).
+# If it's not the latest revision , use the "Update machine policy" action in the Configuration Manager control panel applet, and then run this code again.
+function Get-RevisionOfAssignment($name) {
+    $assignments = Get-WmiObject -Namespace root\ccm\Policy\Machine -Query "Select * FROM CCM_ApplicationCIAssignment" | where { $_.assignmentname -like $name }
+	foreach($assignment in $assignments) {
+		$xmlString = @($assignment.AssignedCIs)[0]
+		$xmlObject = New-Object -TypeName System.Xml.XmlDocument
+		$xmlObject.LoadXml($xmlString)
+		$rev = $xmlObject.CI.ID.Split("/")[2]
+		$assignment | Add-Member -NotePropertyName "Revision" -NotePropertyValue $rev
+	}
+	$assignments | Select Revision,AssignmentName
+}
+
+Get-RevisionOfAssignment "*autocad*"
+
+
+# -----------------------------------------------------------------------------
+
+# Get the refresh schedules of all MECM device collections, limit them to those that refresh daily, and print them in a table, sorted by refresh time and then by collection name:
+$colls = Get-CMDeviceCollection
+$colls | Select Name,@{Name="RecurStartDate";Expression={$_.RefreshSchedule.StartTime.ToString("yyyy-MM-dd")}},@{Name="RecurTime";Expression={$_.RefreshSchedule.StartTime.ToString("HH:mm:ss")}},@{Name="RecurIntervalDays";Expression={$_.RefreshSchedule.DaySpan}},@{Name="RecurIntervalHours";Expression={$_.RefreshSchedule.HourSpan}},@{Name="RecurIntervalMins";Expression={$_.RefreshSchedule.MinuteSpan}} | Where { $_.RecurDays -eq 1 } | Sort RefreshTime,Name | Format-Table
+
+# -----------------------------------------------------------------------------
+
 # Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
 $sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
 Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
+
+# -----------------------------------------------------------------------------
+
+# Get all MECM Collections and apps named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
+
+$colls = Get-CMCollection | Where { $_.Name -like "UIUC-ENGR *" }
+$colls | ForEach {
+	$name = $_.Name
+	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
+	Write-Host "Renaming collection `"$name`" to `"$newname`"..."
+	Set-CMCollection -Name $name -NewName $newname
+}
+
+$apps = Get-CMApplication -Fast | Where { $_.LocalizedDisplayName -like "UIUC-ENGR *" }
+$apps | ForEach {
+	$name = $_.LocalizedDisplayName
+	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
+	Write-Host "Renaming app `"$name`" to `"$newname`"..."
+	Set-CMApplication -Name $name -NewName $newname
+}
 
 # -----------------------------------------------------------------------------
 
