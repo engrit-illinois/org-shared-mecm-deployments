@@ -257,7 +257,24 @@ Get-RevisionOfAssignment "*autocad*"
 
 # Get the refresh schedules of all MECM device collections, limit them to those that refresh daily, and print them in a table, sorted by refresh time and then by collection name:
 $colls = Get-CMDeviceCollection
-$colls | Select Name,@{Name="RecurStartDate";Expression={$_.RefreshSchedule.StartTime.ToString("yyyy-MM-dd")}},@{Name="RecurTime";Expression={$_.RefreshSchedule.StartTime.ToString("HH:mm:ss")}},@{Name="RecurIntervalDays";Expression={$_.RefreshSchedule.DaySpan}},@{Name="RecurIntervalHours";Expression={$_.RefreshSchedule.HourSpan}},@{Name="RecurIntervalMins";Expression={$_.RefreshSchedule.MinuteSpan}} | Where { $_.RecurDays -eq 1 } | Sort RefreshTime,Name | Format-Table
+$collsPruned = $colls | Select Name,@{
+	Name="RecurStartDate"
+	Expression={$_.RefreshSchedule.StartTime.ToString("yyyy-MM-dd")}
+},@{
+	Name="RecurTime"
+	Expression={$_.RefreshSchedule.StartTime.ToString("HH:mm:ss")}
+},@{
+	Name="RecurIntervalDays"
+	Expression={$_.RefreshSchedule.DaySpan}
+},@{
+	Name="RecurIntervalHours"
+	Expression={$_.RefreshSchedule.HourSpan}
+},@{
+	Name="RecurIntervalMins"
+	Expression={$_.RefreshSchedule.MinuteSpan}
+}
+$collsWithDailySchedules = $collsPruned | Where { $_.RecurDays -eq 1 } | Sort RefreshTime,Name
+$collsWithDailySchedules | Format-Table
 
 # -----------------------------------------------------------------------------
 
