@@ -260,7 +260,7 @@ Get-RevisionOfAssignment "*autocad*"
 # sort by refresh time and then by collection name,
 # and print them in a table.
 # This will take a while to run.
-# Useful for finding out if we have a bunch of collections refreshing at the same time, and potentially degrading MECM performance.
+# Useful for finding out if we are contributing to poor MECM performance by having a bunch of collections refreshing at the same time, and when those collections refresh.
 
 $colls = Get-CMDeviceCollection
 $collsPruned = $colls | Select `
