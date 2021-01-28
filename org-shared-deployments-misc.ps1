@@ -263,23 +263,14 @@ Get-RevisionOfAssignment "*autocad*"
 # Useful for finding out if we have a bunch of collections refreshing at the same time, and potentially degrading MECM performance.
 
 $colls = Get-CMDeviceCollection
-$collsPruned = $colls | Select Name,@{
-	Name="RecurStartDate"
-	Expression={$_.RefreshSchedule.StartTime.ToString("yyyy-MM-dd")}
-},@{
-	Name="RecurTime"
-	Expression={$_.RefreshSchedule.StartTime.ToString("HH:mm:ss")}
-},@{
-	Name="RecurIntervalDays"
-	Expression={$_.RefreshSchedule.DaySpan}
-},@{
-	Name="RecurIntervalHours"
-	Expression={$_.RefreshSchedule.HourSpan}
-},@{
-	Name="RecurIntervalMins"
-	Expression={$_.RefreshSchedule.MinuteSpan}
-}
-$collsWithDailySchedules = $collsPruned | Where { $_.RecurDays -eq 1 } | Sort RefreshTime,Name
+$collsPruned = $colls | Select `
+	Name,
+	@{Name="RecurStartDate";Expression={$_.RefreshSchedule.StartTime.ToString("yyyy-MM-dd")}},
+	@{Name="RecurTime";Expression={$_.RefreshSchedule.StartTime.ToString("HH:mm:ss")}},
+	@{Name="RecurIntervalDays";Expression={$_.RefreshSchedule.DaySpan}},
+	@{Name="RecurIntervalHours";Expression={$_.RefreshSchedule.HourSpan}},
+	@{Name="RecurIntervalMins";Expression={$_.RefreshSchedule.MinuteSpan}}
+$collsWithDailySchedules = $collsPruned | Where { $_.RecurIntervalDays -eq 1 } | Sort RefreshTime,Name
 $collsWithDailySchedules | Format-Table
 
 # -----------------------------------------------------------------------------
