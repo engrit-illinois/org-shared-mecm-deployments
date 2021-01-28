@@ -270,7 +270,7 @@ $collsPruned = $colls | Select `
 	@{Name="RecurIntervalDays";Expression={$_.RefreshSchedule.DaySpan}},
 	@{Name="RecurIntervalHours";Expression={$_.RefreshSchedule.HourSpan}},
 	@{Name="RecurIntervalMins";Expression={$_.RefreshSchedule.MinuteSpan}}
-$collsWithDailySchedules = $collsPruned | Where { $_.RecurIntervalDays -eq 1 } | Sort RefreshTime,Name
+$collsWithDailySchedules = $collsPruned | Where { $_.RecurIntervalDays -eq 1 } | Sort RecurTime,Name
 $collsWithDailySchedules | Format-Table
 
 # -----------------------------------------------------------------------------
