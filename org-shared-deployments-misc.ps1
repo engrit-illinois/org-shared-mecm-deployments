@@ -153,3 +153,10 @@ $apps | Select ApplicationName,UpdateSupersedence
 # https://gitlab.engr.illinois.edu/engrit-epm/org-shared-deployments/-/tree/master
 
 # -----------------------------------------------------------------------------
+
+# Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
+$sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
+Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
+
+# -----------------------------------------------------------------------------
+
