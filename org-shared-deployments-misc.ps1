@@ -301,3 +301,11 @@ $apps | ForEach {
 
 # -----------------------------------------------------------------------------
 
+# Force Software Center to reset its policy
+# Useful for when an application is stuck downloading/installing on a client, and you want to redeploy it
+# https://docs.microsoft.com/en-us/answers/questions/123991/sccm-software-center-how-to-reset-or-cancel-an-app.html
+# Should be followed up by running the download computer policy/app deployment eval cycles
+WMIC /Namespace:\\root\ccm path SMS_Client CALL ResetPolicy 1 /NOINTERACTIVE
+
+# -----------------------------------------------------------------------------
+
