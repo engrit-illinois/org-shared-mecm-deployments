@@ -172,4 +172,4 @@ The path to the ConfigurationManager Powershell module installed on the local ma
 Default is `$($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1`.  
 
 # Notes
-- By mseng3
+- By mseng3. See my other projects here: https://github.com/mmseng/code-compendium.
