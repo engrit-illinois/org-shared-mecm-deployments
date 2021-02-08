@@ -36,8 +36,9 @@ This is not official MECM terminology, but we call these "deployment collections
 
 1. Download `New-CMOrgModelDeploymentCollection.psm1`
 2. Import the file as a module: `Import-Module c:\path\to\New-CMOrgModelDeploymentCollection.psm1`
-3. Run it, e.g.: `New-CMOrgModelDeploymentCollection -App "Slack - Latest"`
-4. Take note of the output logged to the console.
+3. Make sure to distribute the app to your DPs/DP group first.
+4. Run it, e.g.: `New-CMOrgModelDeploymentCollection -App "Slack - Latest"`
+5. Take note of the output logged to the console.
 
 ### Parameters
 
