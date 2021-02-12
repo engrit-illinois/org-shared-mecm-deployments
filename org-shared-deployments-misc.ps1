@@ -275,6 +275,26 @@ $collsWithDailySchedules | Format-Table
 
 # -----------------------------------------------------------------------------
 
+# Find collections which have "incremental updates" enabled
+# https://www.danielengberg.com/sccm-powershell-script-update-collection-schedule/
+$refreshTypes = @{
+    1 = "Manual Update Only"
+    2 = "Scheduled Updates Only"
+    4 = "Incremental Updates Only"
+    6 = "Incremental and Scheduled Updates"
+}
+$colls = Get-CMCollection | Where { ($_.RefreshType -eq 4) -or ($_.RefreshType -eq 6) }
+$collsCustom = $colls | Select Name,RefreshType,@{
+    Name = "RefreshTypeFriendly"
+    Expression = {
+        $type = $_.RefreshType
+        $refreshTypes.$type
+    }
+}
+$collsCustom | Format-Table
+
+# -----------------------------------------------------------------------------
+
 # Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
 $sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
 Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
