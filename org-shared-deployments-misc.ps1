@@ -287,7 +287,7 @@ $colls = Get-CMCollection | Where { ($_.RefreshType -eq 4) -or ($_.RefreshType -
 $collsCustom = $colls | Select Name,RefreshType,@{
     Name = "RefreshTypeFriendly"
     Expression = {
-        $type = $_.RefreshType
+        [int]$type = $_.RefreshType
         $refreshTypes.$type
     }
 }
