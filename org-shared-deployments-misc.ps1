@@ -13,6 +13,7 @@ Exit
 # -----------------------------------------------------------------------------
 
 # Prepare a connection to SCCM so you can directly use ConfigurationManager Powershell cmdlets without opening the admin console app
+# This is posted as a module in its own repo here: https://github.com/engrit-illinois/Prep-MECM
 function Prep-MECM {
 	$SiteCode = "MP0" # Site code 
 	$ProviderMachineName = "sccmcas.ad.uillinois.edu" # SMS Provider machine name
