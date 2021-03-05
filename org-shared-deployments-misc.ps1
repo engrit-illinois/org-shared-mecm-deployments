@@ -330,3 +330,13 @@ WMIC /Namespace:\\root\ccm path SMS_Client CALL ResetPolicy 1 /NOINTERACTIVE
 
 # -----------------------------------------------------------------------------
 
+# Find the app/deployment type associated with the CI_UniqueId of an unknown deployment type:
+$ciuid = "DeploymentType_fb0b749d-dba0-45c4-b30e-98497831b2d7"
+$ciuid = $ciuid.Replace("DeploymentType_","")
+$dt = Get-WmiObject -Namespace "root\sms\site_MP0" -ComputerName "sccmcas.ad.uillinois.edu" -Class "SMS_Deploymenttype" -Filter "CI_UniqueId like '%$ciuid%'"
+Write-Host "Deployment type: `"$($dt.LocalizedDisplayName)`""
+$app = Get-CMApplication -ModelName $dt.AppModelName
+Write-Host "App: `"$($app.LocalizedDisplayName)`""
+
+# -----------------------------------------------------------------------------
+
