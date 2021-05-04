@@ -128,8 +128,8 @@ function Report-UnnecessaryDirectDeployments {
 	
 	# Format list
 	$dupeDeps = $dupeDeps | Select @(
-		@{ Name="RedundantCollection"; Expression={$_.CollectionName} },
-		@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} },
+		@{Name="RedundantCollection";Expression={$_.CollectionName}},
+		@{Name="RedundantCollectionSupersedenceEnabled";Expression={$_.UpdateSupersedence}},
 		OrgCollection,
 		OrgCollectionSupersedenceEnabled,
 		ApplicationName,
