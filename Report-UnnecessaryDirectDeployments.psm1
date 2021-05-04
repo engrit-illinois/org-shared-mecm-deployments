@@ -131,7 +131,7 @@ function Report-UnnecessaryDirectDeployments {
 			@{ Name="Redundant Deployment Collection"; Expression={$_.CollectionName} }
 			@{ Name="Redundant Deployment Supersedence Enabled"; Expression={$_.UpdateSupersedence} }
 			"Org Deployment Collection"
-			"Org Deployment SupersedenceEnabled"
+			"Org Deployment Supersedence Enabled"
 			@{ Name="Application Name"; Expression={$_.ApplicationName} }
 			"Action"
 			"Purpose"
