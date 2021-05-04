@@ -64,7 +64,7 @@ function Report-UnnecessaryDirectDeployments {
 			$depsThisColl = Get-CMApplicationDeployment -CollectionName $coll.Name
 			log "        Found $(@($depsThisColl).count) deployments to this shared collection."
 			if(@($depsThisColl).count -ne 1) {
-				log "        Warning: there should exactly 1 deployment to shared collections!"
+				log "        Warning: there should be exactly 1 deployment to shared collections!"
 			}
 			
 			# For each deployment/purpose combination
