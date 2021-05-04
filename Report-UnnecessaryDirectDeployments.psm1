@@ -43,107 +43,116 @@ function Report-UnnecessaryDirectDeployments {
 		log "Done prepping connection to MECM."
 	}
 	
-	log ""
-	
-	$myPWD = $pwd.path
-	Prep-MECM
-	
-	log ""
-	
-	# Get list of org shared software deployment collections
-	log "Getting all collections..."
-	$collsAll = Get-CMDeviceCollection
-	log "Found $(@($collsAll).count) collections."
-	
-	log "Filtering to org shared software deployment collections (`"UIUC-ENGR-Deploy *`")..."
-	$collsShared = $collsAll | Where { $_.Name -like "UIUC-ENGR-Deploy *" } | Sort Name
-	log "Found $(@($collsShared).count) shared collections."
+	function Get-DupeDeps {
+		# Get list of org shared software deployment collections
+		log "Getting all collections..."
+		$collsAll = Get-CMDeviceCollection
+		log "Found $(@($collsAll).count) collections."
 		
-	# Get list of application deployments to these collections
-	# Count required and available deployments separately
-	log "Getting deployments to shared collections..."
-	$dupeDeps = @()
-	$i = 0
-	foreach($coll in $collsShared) {
-		$i += 1
-		log "    Getting deployments to collection #$i/$(@($collsShared).count): `"$($coll.Name)`"..."
-		$depsThisColl = Get-CMApplicationDeployment -CollectionName $coll.Name
-		log "        Found $(@($depsThisColl).count) deployments to this shared collection."
-		if(@($depsThisColl).count -ne 1) {
-			log "        Warning: there should exactly 1 deployment to shared collections!"
+		log "Filtering to org shared software deployment collections (`"UIUC-ENGR-Deploy *`")..."
+		$collsShared = $collsAll | Where { $_.Name -like "UIUC-ENGR-Deploy *" } | Sort Name
+		log "Found $(@($collsShared).count) shared collections."
+			
+		# Get list of application deployments to these collections
+		# Count required and available deployments separately
+		log "Getting deployments to shared collections..."
+		$dupeDeps = @()
+		$i = 0
+		foreach($coll in $collsShared) {
+			$i += 1
+			log "    Getting deployments to collection #$i/$(@($collsShared).count): `"$($coll.Name)`"..."
+			$depsThisColl = Get-CMApplicationDeployment -CollectionName $coll.Name
+			log "        Found $(@($depsThisColl).count) deployments to this shared collection."
+			if(@($depsThisColl).count -ne 1) {
+				log "        Warning: there should exactly 1 deployment to shared collections!"
+			}
+			
+			# For each deployment/purpose combination
+			log "        Getting collections where this app deployment/purpose combination is duplicated..."
+			foreach($dep in $depsThisColl) {
+				# https://www.petervanderwoude.nl/post/tag/applications/
+				# https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/apps/sms_applicationassignment-server-wmi-class
+				# 0 = Required, 2 = Available
+				$purposes = @{
+					0 = "Required"
+					2 = "Available"
+				}
+				$purpose = $purposes.($dep.OfferTypeID)
+				
+				# https://stackoverflow.com/questions/14748402/uninstalling-applications-using-sccm-sdk
+				# https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/compliance/sms_ciassignmentbaseclass-server-wmi-class
+				# https://www.reddit.com/r/SCCM/comments/80fczg/help_does_anyone_know_where_action_is_derived/
+				# 1 = Install (a.k.a. Required), 2 = Uninstall (a.k.a.  Not Allowed)
+				$actions = @{
+					1 = "Install"
+					2 = "Uninstall"
+				}
+				$action = $actions.($dep.DesiredConfigType)
+				
+				log "            App: $($dep.ApplicationName)"
+				log "            Purpose: $purpose"
+				log "            Action: $action"
+				
+				# Get all deployments of the app of this deployment
+				log "            Getting all deployments of app..."
+				$depsThisApp = Get-CMApplicationDeployment -Name $dep.ApplicationName
+				log "                Found $(@($depsThisApp).count) deployments of app."
+				
+				# Filter out the deployment to this shared collection
+				$otherDepsThisApp = $depsThisApp | Where { $_.CollectionName -ne $dep.CollectionName }
+				
+				# Filter out deployments with a different purpose than this shared collection
+				log "            Getting all deployments (to other collections) which have the same action and purpose..."
+				$dupeDepsThisApp = $otherDepsThisApp | Where { $_.OfferTypeID -eq $dep.OfferTypeID }
+				$dupeDepsThisApp = $dupeDepsThisApp | Where { $_.DesiredConfigType -eq $dep.DesiredConfigType }
+				log "                Found $(@($dupeDepsThisApp).count) other collections with duplicate app deployment, action and purpose."
+				
+				$dupeDepsThisApp | ForEach {
+					$_ | Add-Member -NotePropertyName "Action" -NotePropertyValue $action
+					$_ | Add-Member -NotePropertyName "Purpose" -NotePropertyValue $purpose
+					$_ | Add-Member -NotePropertyName "OrgCollection" -NotePropertyValue $dep.CollectionName
+					$_ | Add-Member -NotePropertyName "OrgCollectionSupersedenceEnabled" -NotePropertyValue $dep.UpdateSupersedence
+				}
+				
+				$dupeDeps += @($dupeDepsThisApp)
+			}
 		}
 		
-		# For each deployment/purpose combination
-		log "        Getting collections where this app deployment/purpose combination is duplicated..."
-		foreach($dep in $depsThisColl) {
-			# https://www.petervanderwoude.nl/post/tag/applications/
-			# https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/apps/sms_applicationassignment-server-wmi-class
-			# 0 = Required, 2 = Available
-			$purposes = @{
-				0 = "Required"
-				2 = "Available"
-			}
-			$purpose = $purposes.($dep.OfferTypeID)
-			
-			# https://stackoverflow.com/questions/14748402/uninstalling-applications-using-sccm-sdk
-			# https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/compliance/sms_ciassignmentbaseclass-server-wmi-class
-			# https://www.reddit.com/r/SCCM/comments/80fczg/help_does_anyone_know_where_action_is_derived/
-			# 1 = Install (a.k.a. Required), 2 = Uninstall (a.k.a.  Not Allowed)
-			$actions = @{
-				1 = "Install"
-				2 = "Uninstall"
-			}
-			$action = $actions.($dep.DesiredConfigType)
-			
-			log "            App: $($dep.ApplicationName)"
-			log "            Purpose: $purpose"
-			log "            Action: $action"
-			
-			# Get all deployments of the app of this deployment
-			log "            Getting all deployments of app..."
-			$depsThisApp = Get-CMApplicationDeployment -Name $dep.ApplicationName
-			log "                Found $(@($depsThisApp).count) deployments of app."
-			
-			# Filter out the deployment to this shared collection
-			$otherDepsThisApp = $depsThisApp | Where { $_.CollectionName -ne $dep.CollectionName }
-			
-			# Filter out deployments with a different purpose than this shared collection
-			log "            Getting all deployments (to other collections) which have the same action and purpose..."
-			$dupeDepsThisApp = $otherDepsThisApp | Where { $_.OfferTypeID -eq $dep.OfferTypeID }
-			$dupeDepsThisApp = $dupeDepsThisApp | Where { $_.DesiredConfigType -eq $dep.DesiredConfigType }
-			log "                Found $(@($dupeDepsThisApp).count) other collections with duplicate app deployment, action and purpose."
-			
-			$dupeDepsThisApp | ForEach {
-				$_ | Add-Member -NotePropertyName "Action" -NotePropertyValue $action
-				$_ | Add-Member -NotePropertyName "Purpose" -NotePropertyValue $purpose
-				$_ | Add-Member -NotePropertyName "OrgCollection" -NotePropertyValue $dep.CollectionName
-				$_ | Add-Member -NotePropertyName "OrgCollectionSupersedenceEnabled" -NotePropertyValue $dep.UpdateSupersedence
-			}
-			
-			$dupeDeps += @($dupeDepsThisApp)
-		}
+		log "Found $(@($dupeDeps).count) total deployments to other collections that duplicate those to shared collections."
+		
+		$dupeDeps
 	}
 	
-	log "Found $(@($dupeDeps).count) total deployments to other collections that duplicate those to shared collections."
+	function Export-DupeDeps($dupeDeps) {
+		log "Exporting data to `"$CSV`"..."
+		
+		# Format list
+		$columns = @(
+			@{ Name="RedundantCollection"; Expression={$_.CollectionName} }
+			@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} }
+			OrgCollection
+			OrgCollectionSupersedenceEnabled
+			ApplicationName
+			Action
+			Purpose
+		)
+		$dupeDeps = $dupeDeps | Select $columns
+		
+		# Export list
+		$dupeDeps | Export-Csv -Path $CSV -NoTypeInformation -Encoding Ascii
+	}
 	
-	# Format list
-	$columns = @(
-		@{ Name="RedundantCollection"; Expression={$_.CollectionName} }
-		@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} }
-		OrgCollection
-		OrgCollectionSupersedenceEnabled
-		ApplicationName
-		Action
-		Purpose
-	)
-	$dupeDeps = $dupeDeps | Select $columns
+	function Do-Stuff {
+		$myPWD = $pwd.path
+		Prep-MECM
+		
+		$dupeDeps = Get-DupeDeps
+		Export-DupeDeps $dupeDeps
+		
+		Set-Location $myPWD
+	}
 	
-	# Export list
-	$dupeDeps | Export-Csv -Path $CSV -NoTypeInformation -Encoding Ascii
+	Do-Stuff
 	
-	Set-Location $myPWD
-	
-	log ""
 	log "EOF"
-	log ""
 }
