@@ -130,11 +130,11 @@ function Report-UnnecessaryDirectDeployments {
 		$columns = @(
 			@{ Name="RedundantCollection"; Expression={$_.CollectionName} }
 			@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} }
-			OrgCollection
-			OrgCollectionSupersedenceEnabled
-			ApplicationName
-			Action
-			Purpose
+			"OrgCollection"
+			"OrgCollectionSupersedenceEnabled"
+			"ApplicationName"
+			"Action"
+			"Purpose"
 		)
 		$dupeDeps = $dupeDeps | Select $columns
 		
