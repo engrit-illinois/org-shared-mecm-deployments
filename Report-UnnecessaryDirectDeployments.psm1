@@ -116,7 +116,8 @@ function Report-UnnecessaryDirectDeployments {
 			$dupeDepsThisApp | ForEach {
 				$_ | Add-Member -NotePropertyName "Action" -NotePropertyValue $action
 				$_ | Add-Member -NotePropertyName "Purpose" -NotePropertyValue $purpose
-				$_ | Add-Member -NotePropertyName "RedundantWith" -NotePropertyValue $dep.CollectionName
+				$_ | Add-Member -NotePropertyName "OrgCollection" -NotePropertyValue $dep.CollectionName
+				$_ | Add-Member -NotePropertyName "OrgCollectionSupersedenceEnabled" -NotePropertyValue $dep.UpdateSupersedence
 			}
 			
 			$dupeDeps += @($dupeDepsThisApp)
@@ -125,8 +126,18 @@ function Report-UnnecessaryDirectDeployments {
 	
 	log "Found $(@($dupeDeps).count) total deployments to other collections that duplicate those to shared collections."
 	
-	# Export newly made list
-	$dupeDeps = $dupeDeps | Select CollectionName,ApplicationName,Action,Purpose,RedundantWith
+	# Format list
+	$dupeDeps = $dupeDeps | Select @(
+		@{ Name="RedundantCollection"; Expression={$_.CollectionName} },
+		@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} },
+		OrgCollection,
+		OrgCollectionSupersedenceEnabled,
+		ApplicationName,
+		Action,
+		Purpose
+	)
+	
+	# Export list
 	$dupeDeps | Export-Csv -Path $CSV -NoTypeInformation -Encoding Ascii
 	
 	Set-Location $myPWD
