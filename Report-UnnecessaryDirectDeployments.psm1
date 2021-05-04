@@ -110,8 +110,8 @@ function Report-UnnecessaryDirectDeployments {
 				$dupeDepsThisApp | ForEach {
 					$_ | Add-Member -NotePropertyName "Action" -NotePropertyValue $action
 					$_ | Add-Member -NotePropertyName "Purpose" -NotePropertyValue $purpose
-					$_ | Add-Member -NotePropertyName "OrgDeploymentCollection" -NotePropertyValue $dep.CollectionName
-					$_ | Add-Member -NotePropertyName "OrgDeploymentSupersedenceEnabled" -NotePropertyValue $dep.UpdateSupersedence
+					$_ | Add-Member -NotePropertyName "Org Deployment Collection" -NotePropertyValue $dep.CollectionName
+					$_ | Add-Member -NotePropertyName "Org Deployment Supersedence Enabled" -NotePropertyValue $dep.UpdateSupersedence
 				}
 				
 				$dupeDeps += @($dupeDepsThisApp)
@@ -128,11 +128,11 @@ function Report-UnnecessaryDirectDeployments {
 		
 		# Format list
 		$columns = @(
-			@{ Name="RedundantDeploymentCollection"; Expression={$_.CollectionName} }
-			@{ Name="RedundantDeploymentSupersedenceEnabled"; Expression={$_.UpdateSupersedence} }
-			"OrgDeploymentCollection"
-			"OrgDeploymentSupersedenceEnabled"
-			"ApplicationName"
+			@{ Name="Redundant Deployment Collection"; Expression={$_.CollectionName} }
+			@{ Name="Redundant Deployment Supersedence Enabled"; Expression={$_.UpdateSupersedence} }
+			"Org Deployment Collection"
+			"Org Deployment SupersedenceEnabled"
+			@{ Name="Application Name"; Expression={$_.ApplicationName} }
 			"Action"
 			"Purpose"
 		)
