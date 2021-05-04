@@ -127,15 +127,16 @@ function Report-UnnecessaryDirectDeployments {
 	log "Found $(@($dupeDeps).count) total deployments to other collections that duplicate those to shared collections."
 	
 	# Format list
-	$dupeDeps = $dupeDeps | Select @(
-		@{Name="RedundantCollection";Expression={$_.CollectionName}},
-		@{Name="RedundantCollectionSupersedenceEnabled";Expression={$_.UpdateSupersedence}},
-		OrgCollection,
-		OrgCollectionSupersedenceEnabled,
-		ApplicationName,
-		Action,
+	$columns = @(
+		@{ Name="RedundantCollection"; Expression={$_.CollectionName} }
+		@{ Name="RedundantCollectionSupersedenceEnabled"; Expression={$_.UpdateSupersedence} }
+		OrgCollection
+		OrgCollectionSupersedenceEnabled
+		ApplicationName
+		Action
 		Purpose
 	)
+	$dupeDeps = $dupeDeps | Select $columns
 	
 	# Export list
 	$dupeDeps | Export-Csv -Path $CSV -NoTypeInformation -Encoding Ascii
