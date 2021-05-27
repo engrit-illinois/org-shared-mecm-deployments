@@ -34,11 +34,10 @@ This is not official MECM terminology, but we call these "deployment collections
 
 ### Example usage
 
-1. Download `New-CMOrgModelDeploymentCollection.psm1`
-2. Import the file as a module: `Import-Module c:\path\to\New-CMOrgModelDeploymentCollection.psm1`
-3. Make sure to distribute the app to your DPs/DP group first.
-4. Run it, e.g.: `New-CMOrgModelDeploymentCollection -App "Slack - Latest"`
-5. Take note of the output logged to the console.
+1. Download `New-CMOrgModelDeploymentCollection.psm1` to `$HOME\Documents\WindowsPowerShell\Modules\New-CMOrgModelDeploymentCollection\New-CMOrgModelDeploymentCollection.psm1`.
+2. Make sure to distribute the app to your DPs/DP group first.
+3. Run it, e.g.: `New-CMOrgModelDeploymentCollection -App "Slack - Latest"`
+4. Take note of the output logged to the console.
 
 ### Parameters
 
@@ -103,11 +102,10 @@ This is useful because the GUI admin console does not provide a native way to se
 
 ### Example usage
 
-1. Download `Get-CMCollsWhichIncludeColl.psm1`
-2. Import the file as a module: `Import-Module c:\path\to\Get-CMCollsWhichIncludeColl.psm1`
-3. Run it. Recommended to save the results to a variable.
+1. Download `Get-CMCollsWhichIncludeColl.psm1` to `$HOME\Documents\WindowsPowerShell\Modules\Get-CMCollsWhichIncludeColl\Get-CMCollsWhichIncludeColl.psm1`.
+2. Run it. Recommended to save the results to a variable.
   - e.g. `$collections = Get-CMCollsWhichIncludeColl "UIUC-ENGR-IS EWS" -GetDeployments`
-4. Access returned data.
+3. Access returned data.
   - e.g. Get names of returned collections: `$collections.Name | Sort`
   - e.g. Get names of applications deployed to returned collections: `$collections._Deployments.ApplicationName | Sort`
 
@@ -143,11 +141,10 @@ This module looks through the org's standardized deployment collections, notes t
 
 ### Example usage
 
-1. Download `Report-UnnecessaryDirectDeployments.psm1`
-2. Import the file as a module: `Import-Module c:\path\to\Report-UnnecessaryDirectDeployments.psm1`
-3. Run it.
+1. Download `Report-UnnecessaryDirectDeployments.psm1` to `$HOME\Documents\WindowsPowerShell\Modules\Report-UnnecessaryDirectDeployments\Report-UnnecessaryDirectDeployments.psm1`.
+2. Run it.
   - e.g. `Report-UnnecessaryDirectDeployments`
-4. Review the generated CSV.
+3. Review the generated CSV.
 
 ### Parameters
 
