@@ -345,10 +345,12 @@ $colls = Get-CMCollection
 $sumMillisec = ($colls | Select FullEvaluationRunTime).FullEvaluationRunTime | Measure-Object -Sum | Select -ExpandProperty Sum
 $sumSec = $sumMillisec / 1000
 $sumMin = $sumSec / 60
+$avg = $sumMillisec
 
 # As of 2021-06-11
 $colls.count # Returns 946 (but one is the "lost computers" root collection)
 $sumMin # Returns 13.3277666666667
+$avg # Returns 845.31289640592
 
 # -----------------------------------------------------------------------------
 
