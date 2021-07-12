@@ -9,6 +9,9 @@ Table of contents:
 - [Get-CollsWhichIncludeColl.psm1](#get-cmcollswhichincludecollpsm1): a module to return the list of collections in which a given collection is included
 - [Report-UnnecessaryDirectDeployments.psm1](#report-unnecessarydirectdeploymentspsm1): a module to list all deployments which are technically duplicates of existing org-level deployments, and thus could be assimilated
 
+# Requirements
+- Currently these custom modules have only been written for and tested with Powershell 5.1. While modern versions of Configuration Manager [support Powershell 7](https://docs.microsoft.com/en-us/powershell/sccm/overview?view=sccm-ps#support-for-powershell-version-7), there are apparently some differences which these scripts do not account for, and there are known Powershell 7 compatibility issues with at least New-CMOrgModelDeploymentCollection.psm1, and possible others.  
+
 # org-shared-deployments-misc.ps1
 
 This doc just contains several snippets for doing various bulk or repetitive actions related to the shared deployments and collections.  
