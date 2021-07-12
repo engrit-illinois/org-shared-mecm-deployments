@@ -340,3 +340,117 @@ Write-Host "App: `"$($app.LocalizedDisplayName)`""
 
 # -----------------------------------------------------------------------------
 
+# Sum up the total FullEvaluationRunTime of all ENGR collections
+# Quick and dirty version. See Get-CMCollectionsEvalRuntime function below.
+
+$colls = Get-CMCollection
+$sumMillisec = ($colls | Select FullEvaluationRunTime).FullEvaluationRunTime | Measure-Object -Sum | Select -ExpandProperty Sum
+$avgMillisec = $sumMillisec / $colls.count
+$sumSec = $sumMillisec / 1000
+$sumMin = $sumSec / 60
+
+# As of 2021-06-11
+$colls.count # Returns 946 (but one is the "lost computers" root collection)
+$sumMin # Returns 13.3277666666667
+$avgMillisec # Returns 845.31289640592
+
+# -----------------------------------------------------------------------------
+
+# Return an object which reports a bunch of MECM collection evaluation runtime data
+
+function Get-CMCollectionsEvalRuntime {
+	
+	param(
+		# Specify a wildcard query to filter to only collections with matching names
+		$NameQuery,
+		
+		# Optional input of pre-made collections objects, to prevent having to wait for them to be pulled again
+		$Collections
+	)
+	
+	# Functions
+	function log($msg) {
+		Write-Host $msg
+	}
+	
+	function addm($property, $value, $object) {
+		$object | Add-Member -NotePropertyName $property -NotePropertyValue $value -Force
+		$object
+	}
+	
+	function Sum-EvalRuntime($type, $colls) {
+		$typeProperty = "$($type)EvaluationRunTime"
+		$sumMillisec = ($colls | Select $typeProperty).$typeProperty | Measure-Object -Sum | Select -ExpandProperty Sum
+		$sumMillisec
+	}
+	
+	# Make an object to keep data
+	$o = [PSCustomObject]@{
+		Data = [PSCustomObject]@{}
+	}
+	
+	# Get collections
+	if($Collections) {
+		log "Using collections specified with -Collections."
+		$colls = $Collections
+	}
+	else {
+		log "Collections were not specified with -Collections. Pulling collections from MECM..."
+		$myPWD = $pwd.path
+		Prep-MECM
+		$colls = Get-CMCollection
+		Set-Location $myPWD
+	}
+	$o.Data = addm "Collections" $colls $o.Data
+	
+	$count = $colls.count
+	log "$count collections were specified or pulled from MECM."
+	$o = addm "CollectionsCount" $colls.count $o
+	
+	# Filter collections
+	log "Filtering collections..."
+	if($NameQuery) {
+		log "Filtering to collections matching specified -NameQuery..."
+		$collsFiltered = $colls | Where { $_.Name -like $NameQuery }
+	}
+	else {
+		log "-NameQuery not specified."
+		$collsFiltered = $colls
+	}
+	$o.Data = addm "FilteredCollections" $collsFiltered $o.Data
+	
+	$countFiltered = $collsFiltered.count
+	log "Filtered to $count collections."
+	$o = addm "FilteredCollectionsCount" $collsFiltered.count $o
+	
+	# Do the math and populate an output object
+	log "Doing the math..."
+	
+	$o = addm "FullSumMillisec" (Sum-EvalRuntime "Full" $collsFiltered) $o
+	$o = addm "FullAvgMillisec" ($o.FullSumMillisec / $countFiltered) $o
+	$o = addm "FullSumSec" ($o.FullSumMillisec / 1000) $o
+	$o = addm "FullAvgSec" ($o.FullSumSec / $countFiltered) $o
+	$o = addm "FullSumMin" ($o.FullSumSec / 60) $o
+	$o = addm "FullAvgMin" ($o.FullSumMin / $countFiltered) $o
+	
+	$o = addm "IncSumMillisec" (Sum-EvalRuntime "Incremental" $collsFiltered) $o
+	$o = addm "IncAvgMillisec" ($o.IncSumMillisec / $countFiltered) $o
+	$o = addm "IncSumSec" ($o.IncSumMillisec / 1000) $o
+	$o = addm "IncAvgSec" ($o.IncSumSec / $countFiltered) $o
+	$o = addm "IncSumMin" ($o.IncSumSec / 60) $o
+	$o = addm "IncAvgMin" ($o.IncSumMin / $countFiltered) $o
+	
+	# Output the object
+	log "Outputting result object..."
+	$o
+}
+
+# Example use:
+Get-CMCollectionsEvalRuntime -NameQuery "UIUC-ENGR-*"
+
+# Or:
+$colls = Get-CMCollection
+Get-CMCollectionsEvalRuntime -NameQuery "UIUC-ENGR-*" -Collections $colls
+
+# -----------------------------------------------------------------------------
+
