@@ -455,43 +455,69 @@ Get-CMCollectionsEvalRuntime -NameQuery "UIUC-ENGR-*" -Collections $colls
 # -----------------------------------------------------------------------------
 
 # Re-run a Required Task Sequence
+# This actually just deletes the information on a computer that tells MECM that the TS has already been run. It doesn't actually kick of the TS.
+# This is useful because the only other ways to force a Required Task Sequence to re-run are:
+# - configure it to re-run on failure (but sometimes you want it to re-run once even when it's already been successfully installed)
+# - configure it to re-run on success (but you usually don't want this, and it would cause endless re-running)
+# - configure it to run on a specific schedule (but you'd have to change the schedule each time you want to re-run it in different circumstances
+# - or re-create the TS deployment entirely (which is usually undesireable for several reasons)
+
 # https://social.technet.microsoft.com/Forums/en-US/b6eff363-ad8c-4412-b10d-fb70f2ead7f2/how-to-rerun-a-required-deployment?forum=configmanagerosd
 # https://msendpointmgr.com/2012/11/21/re-run-task-sequence-with-powershell/
 # https://smsagent.blog/2014/01/23/re-running-a-task-sequence/
 
-$TsPackageId = "MP0028BE" # You can get the PackageID of the Task Sequence from the MECM Console
-$ComputerName = "computer-name-01"
-
-$scriptBlock = {
+function Rerun-TS {
 	param(
-		[string]$TsPackageId
+		[string]$TsPackageId,
+		[string]$ComputerName
 	)
-	$schedule = Get-WmiObject -Namespace "root\ccm\scheduler" -Class ccm_scheduler_history | where {$_.ScheduleID -like "*$TsPackageId*"}
-	if(!$schedule) { Write-Host "Did not find schedule for given Task Sequence!" }
-	else {
-		Write-Host "Found schedule for given Task Sequence."
-		Write-Host "Schedule ID: `"$($schedule.ScheduleID)`"."
-		Write-Host "Deleting schedule..."
-		Get-WmiObject -Namespace "root\ccm\scheduler" -Class ccm_scheduler_history | where {$_.ScheduleID -like "*$TsPackageId*"} | Remove-WmiObject
-		
-		$newSchedule = Get-WmiObject -Namespace "root\ccm\scheduler" -Class ccm_scheduler_history | where {$_.ScheduleID -like "*$TsPackageId*"}
-		if($schedule) { Write-Host "Failed to delete schedule for given Task Sequence!" }
+
+	$scriptBlock = {
+		param(
+			[string]$TsPackageId
+		)
+		$schedule = Get-WmiObject -Namespace "root\ccm\scheduler" -Class ccm_scheduler_history | where {$_.ScheduleID -like "*$TsPackageId*"}
+		if(!$schedule) { Write-Host "Did not find schedule for given Task Sequence!" }
 		else {
-			Write-Host "Successfully deleted schedule for given Task Sequence."
-			Write-Host "Restarting CCMExec..."
-			Get-Service | where {$_.Name -eq "CCMExec"} | Restart-Service
+			Write-Host "Found schedule for given Task Sequence."
+			Write-Host "Schedule ID: `"$($schedule.ScheduleID)`"."
+			Write-Host "Deleting schedule..."
+			$schedule | Remove-WmiObject
+
+			$newSchedule = Get-WmiObject -Namespace "root\ccm\scheduler" -Class ccm_scheduler_history | where {$_.ScheduleID -like "*$TsPackageId*"}
+			if($newSchedule) { Write-Host "Failed to delete schedule for given Task Sequence!" }
+			else {
+				Write-Host "Successfully deleted schedule for given Task Sequence."
+				Write-Host "Restarting CCMExec..."
+				Get-Service | where {$_.Name -eq "CCMExec"} | Restart-Service
+			}
 		}
 	}
+
+	Write-Host "Starting PSSession to `"$ComputerName`"..."
+	$session = New-PSSession -ComputerName $ComputerName
+	Write-Host "Sending commands to session..."
+	Invoke-Command -Session $session -ScriptBlock $scriptBlock -ArgumentList $TsPackageId
+	Write-Host "Done sending commands to session."
+	Write-Host "Ending session..."
+	Remove-PSSession $session
+	Write-Host "Done."
 }
 
-Write-Host "Starting PSSession to `"$ComputerName`"..."
-$session = New-PSSession -ComputerName $ComputerName
-Write-Host "Sending commands to session..."
-Invoke-Command -Session $session -ScriptBlock $scriptBlock -ArgumentList $TsPackageId
-Write-Host "Done sending commands to session."
-Write-Host "Ending session..."
-Remove-PSSession $session
-Write-Host "Done."
+# Examples:
+
+# You can get the PackageID of the Task Sequence from the MECM Console
+$TsPackageId = "MP0028BE"
+
+# Run on one computer
+Rerun-TS -TsPackageId $TsPackageId -ComputerName "comp-name-01"
+
+# Run on multiple sequential lab computers
+foreach($int in @(1..10)) {
+	$num = ([string]$int).PadLeft(2,"0")
+	$name = "COMP-NAME-$($num)"
+	Rerun-TS -TSPackageId $TsPackageId -ComputerName $name
+}
 
 # -----------------------------------------------------------------------------
 
