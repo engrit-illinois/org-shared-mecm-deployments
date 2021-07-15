@@ -574,7 +574,7 @@ function Invoke-TaskSequence {
 # Specify the PackageID of the desired TS. Get this from the MECM console.
 $tsPackageId = "MP0028BE"
 # Specify the DeploymentID of the desired deployment (in case there are multiple deployments of the same TS). Get this from the MECM console.
-$tsDeploymentId = "MP021149"
+$tsDeploymentId = "MP021145"
 
 # Run on one computer
 Invoke-TaskSequence -ComputerName "comp-name-01" -TsPackageId $tsPackageId -TsDeploymentId $tsDeploymentId
