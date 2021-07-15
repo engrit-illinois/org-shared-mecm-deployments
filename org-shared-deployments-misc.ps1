@@ -454,14 +454,10 @@ Get-CMCollectionsEvalRuntime -NameQuery "UIUC-ENGR-*" -Collections $colls
 
 # -----------------------------------------------------------------------------
 
-# Re-run a Required Task Sequence
-# This actually just deletes the information on a computer that tells MECM that the TS has already been run. It doesn't actually kick of the TS.
-# This is useful because the only other ways to force a Required Task Sequence to re-run are:
-# - configure it to re-run on failure (but sometimes you want it to re-run once even when it's already been successfully installed)
-# - configure it to re-run on success (but you usually don't want this, and it would cause endless re-running)
-# - configure it to run on a specific schedule (but you'd have to change the schedule each time you want to re-run it in different circumstances
-# - or re-create the TS deployment entirely (which is usually undesireable for several reasons)
-
+# Re-run a Required Task Sequence deployment
+# This actually just deletes the information on a computer that tells MECM that the TS has already been run. It doesn't actually kick of the TS; that will just happen because the TS is Required.
+# This requires the TS deployment to be configured to "Always re-run", and for the relevant machines to be given this deployment.
+# To do this for an Available deployment see the next snippet.
 # https://social.technet.microsoft.com/Forums/en-US/b6eff363-ad8c-4412-b10d-fb70f2ead7f2/how-to-rerun-a-required-deployment?forum=configmanagerosd
 # https://msendpointmgr.com/2012/11/21/re-run-task-sequence-with-powershell/
 # https://smsagent.blog/2014/01/23/re-running-a-task-sequence/
@@ -520,4 +516,77 @@ foreach($int in @(1..10)) {
 }
 
 # -----------------------------------------------------------------------------
+
+# Trigger an available Task Sequence deployment immediately
+# https://msendpointmgr.com/2019/02/14/how-to-rerun-a-task-sequence-in-configmgr-using-powershell/
+
+function Invoke-TaskSequence {
+	param(
+		[string]$TsPackageId,
+		[string]$TsDeploymentId,
+		[string]$ComputerName
+	)
+
+	$scriptBlock = {
+		param(
+			[string]$TsPackageId,
+			[string]$TsDeploymentId
+		)
+		
+		# Get the local advertisement policy for this deployment
+		Write-Host "        Getting local advertisement..."
+		$tsPolicy = Get-WmiObject -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence" | Where-Object { ($_.PKG_PackageID -eq $TsPackageId) -and ($_.ADV_AdvertisementID -eq $TsDeploymentId) }
+
+		# Set the RepeatRunBehavior property of this local advertisement to trick the client into thinking it should always rerun, regardless of previous success/failure
+		Write-Host "        Modifying local advertisement..."
+		if($tsPolicy.ADV_RepeatRunBehavior -notlike "RerunAlways") {
+			$tsPolicy.ADV_RepeatRunBehavior = "RerunAlways"
+			$tsPolicy.Put() | Out-Null
+		}
+
+		# Set the MandatoryAssignments property of this local advertisement to trickt the client into thinking it's a Required deployment, regardless of whether it actually is
+		$tsPolicy.Get()
+		$tsPolicy.ADV_MandatoryAssignments = $true
+		$tsPolicy.Put() | Out-Null
+
+		# Get the schedule for the newly modified advertisement and trigger it to run
+		# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
+		Write-Host "        Getting schedule for local advertisement..."
+		$scheduleId = Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History" | Where-Object { ($_.ScheduleID -like "*$($TsPackageId)*") -and ($_.ScheduleID -like "*$($TsDeploymentId)*") } | Select-Object -ExpandProperty ScheduleID
+		
+		Write-Host "        Triggering schedule for newly-modified local advertisement..."
+		Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+		
+	}
+
+	Write-Host "Starting PSSession to `"$ComputerName`"..."
+	$session = New-PSSession -ComputerName $ComputerName
+	Write-Host "    Sending commands to session..."
+	Invoke-Command -Session $session -ScriptBlock $scriptBlock -ArgumentList $TsPackageId,$TsDeploymentId
+	Write-Host "    Done sending commands to session."
+	Write-Host "    Ending session..."
+	Remove-PSSession $session
+	Write-Host "Done."
+}
+
+# Examples:
+
+# Specify the PackageID of the desired TS. Get this from the MECM console.
+$tsPackageId = "MP0028BE"
+# Specify the DeploymentID of the desired deployment (in case there are multiple deployments of the same TS). Get this from the MECM console.
+$tsDeploymentId = "MP021149"
+
+# Run on one computer
+Invoke-TaskSequence -ComputerName "comp-name-01" -TsPackageId $tsPackageId -TsDeploymentId $tsDeploymentId
+
+# Run on multiple sequential lab computers
+foreach($int in @(1..10)) {
+	$num = ([string]$int).PadLeft(2,"0")
+	$comp = "COMP-NAME-$($num)"
+	Invoke-TaskSequence -ComputerName $comp -TsPackageId $tsPackageId -TsDeploymentId $tsDeploymentId
+}
+
+
+# -----------------------------------------------------------------------------
+
 
