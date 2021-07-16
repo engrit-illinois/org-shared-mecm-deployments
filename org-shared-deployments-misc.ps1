@@ -533,30 +533,56 @@ function Invoke-TaskSequence {
 			[string]$TsDeploymentId
 		)
 		
-		# Get the local advertisement policy for this deployment
-		Write-Host "        Getting local advertisement..."
-		$tsPolicy = Get-WmiObject -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence" | Where-Object { ($_.PKG_PackageID -eq $TsPackageId) -and ($_.ADV_AdvertisementID -eq $TsDeploymentId) }
-
-		# Set the RepeatRunBehavior property of this local advertisement to trick the client into thinking it should always rerun, regardless of previous success/failure
-		Write-Host "        Modifying local advertisement..."
-		if($tsPolicy.ADV_RepeatRunBehavior -notlike "RerunAlways") {
-			$tsPolicy.ADV_RepeatRunBehavior = "RerunAlways"
-			$tsPolicy.Put() | Out-Null
+		Write-Host "        Retrieving local TS advertisements from WMI..."
+		$tsAds = Get-WmiObject -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence"
+		
+		if(-not $tsAds) { Write-Host "            Failed to retrieve local TS advertisements from WMI!" }
+		else {
+			Write-Host "        Getting local advertisement for deployment `"$($TsDeploymentId)`" of TS `"$($TsPackageId)`"..."
+			$tsAd = $tsAds | Where-Object { ($_.PKG_PackageID -eq $TsPackageId) -and ($_.ADV_AdvertisementID -eq $TsDeploymentId) }
+			
+			if(-not $tsAd) { Write-Host "            Failed to get local advertisement!" }
+			else {
+				Write-Host "        Modifying local advertisement..."
+				
+				# Set the RepeatRunBehavior property of this local advertisement to trick the client into thinking it should always rerun, regardless of previous success/failure
+				if($tsAd.ADV_RepeatRunBehavior -notlike "RerunAlways") {
+					Write-Host "            Changing RepeatRunBehavior from `"$($tsAd.ADV_RepeatRunBehavior) to `"RerunAlways`"."
+					$tsAd.ADV_RepeatRunBehavior = "RerunAlways"
+					$tsAd.Put() | Out-Null
+				}
+				else { Write-Host "            RepeatRunBehavior is already `"RerunAlways`"." }
+				
+				# Set the MandatoryAssignments property of this local advertisement to trick the client into thinking it's a Required deployment, regardless of whether it actually is
+				if($tsAd.ADV_MandatoryAssignments -ne $true) {
+					Write-Host "            Changing MandatoryAssignments from `"$($tsAd.ADV_MandatoryAssignments) to `"$true`"."
+					$tsAd.Get()
+					$tsAd.ADV_MandatoryAssignments = $true
+					$tsAd.Put() | Out-Null
+				}
+				else { Write-Host "            MandatoryAssignments is already `"$true`"." }
+				
+				# Get the schedule for the newly modified advertisement and trigger it to run
+				Write-Host "        Triggering TS..."
+				
+				Write-Host "            Retrieving scheduler history from WMI..."
+				$schedulerHistory = Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+				
+				if(-not $schedulerHistory) { Write-Host "                Failed to retrieve scheduler history from WMI!" }
+				else {
+					
+					Write-Host "            Getting schedule for local TS advertisement..."
+					# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
+					$scheduleId = $schedulerHistory | Where-Object { ($_.ScheduleID -like "*$($TsPackageId)*") -and ($_.ScheduleID -like "*$($TsDeploymentId)*") } | Select-Object -ExpandProperty ScheduleID
+					
+					if(-not $scheduleId) { Write-Host "                Failed to get schedule for local TS advertisement!" }
+					else {
+						Write-Host "            Triggering schedule for newly-modified local advertisement..."
+						Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+					}
+				}
+			}
 		}
-
-		# Set the MandatoryAssignments property of this local advertisement to trickt the client into thinking it's a Required deployment, regardless of whether it actually is
-		$tsPolicy.Get()
-		$tsPolicy.ADV_MandatoryAssignments = $true
-		$tsPolicy.Put() | Out-Null
-
-		# Get the schedule for the newly modified advertisement and trigger it to run
-		# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
-		Write-Host "        Getting schedule for local advertisement..."
-		$scheduleId = Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History" | Where-Object { ($_.ScheduleID -like "*$($TsPackageId)*") -and ($_.ScheduleID -like "*$($TsDeploymentId)*") } | Select-Object -ExpandProperty ScheduleID
-		
-		Write-Host "        Triggering schedule for newly-modified local advertisement..."
-		Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
-		
 	}
 
 	Write-Host "Starting PSSession to `"$ComputerName`"..."
