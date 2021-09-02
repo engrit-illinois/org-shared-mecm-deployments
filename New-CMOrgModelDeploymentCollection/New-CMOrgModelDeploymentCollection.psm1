@@ -184,73 +184,91 @@ function New-CMOrgModelDeploymentCollection {
 		$sched
 	}
 	
-	function Do-Stuff {
+	function Test-SupportedPowershellVersion {
+		log "This custom module (and the overall ConfigurationManager Powershell module) only support Powershell v5.1. Checking Powershell version..."
+		
+		$ver = $Host.Version
+		log "Powershell version is `"$($ver.Major).$($ver.Minor)`"."
+		if(
+			($ver.Major -eq 5) -and
+			($ver.Minor -eq 1)
+		) {
+			return $true
+		}
+		return $false
+	}
 	
-		# Check that the specified app exists
-		$exists = App-Exists
+	function Do-Stuff {
+		log ""
 		
-		if($exists) {
-		
+		# Check that supported Powershell version is being used
+		if(Test-SupportedPowershellVersion) {
+			
+			$myPWD = $pwd.path
+			Prep-MECM
 			log ""
 		
-			# Get core app name
-			$appName = Get-AppName
+			# Check that the specified app exists
+			$exists = App-Exists
 			
-			log ""
+			if($exists) {
 			
-			# Some logging
-			if($ISOnly) {
-				log "-ISOnly was specified."
-			}
-			else {
-				log "-ISOnly was not specified."
-			}
+				log ""
 			
-			# Build base name of new collection(s) and limiting collection name
-			$collNameBase = Get-BaseCollName $appName
-			log "    Collection name(s) will be `"$collNameBase (<purpose>)`"."
-			
-			$limitingColl = Get-LimitingColl
-			log "    Limiting collection(s) will be `"$limitingColl`"."
-			
-			log ""
-			
-			# Build membership evaluation schedule
-			$sched = Get-Sched
-			
-			# Logic for which collections/deployments to create
-			if(!$Uninstall) {
-				if(!$SkipAvailable) {
-					New-Coll "Available" $collNameBase $limitingColl $sched
-				}
-				else {
-					log "-SkipAvailable was specified. Skipping creation of `"Available`" collection/deployment."
-				}
+				# Get core app name
+				$appName = Get-AppName
 				
 				log ""
 				
-				if(!$SkipRequired) {
-					New-Coll "Required" $collNameBase $limitingColl $sched
+				# Some logging
+				if($ISOnly) {
+					log "-ISOnly was specified."
 				}
 				else {
-					log "-SkipRequired was specified. Skipping creation of `"Required`" collection/deployment."
+					log "-ISOnly was not specified."
+				}
+				
+				# Build base name of new collection(s) and limiting collection name
+				$collNameBase = Get-BaseCollName $appName
+				log "    Collection name(s) will be `"$collNameBase (<purpose>)`"."
+				
+				$limitingColl = Get-LimitingColl
+				log "    Limiting collection(s) will be `"$limitingColl`"."
+				
+				log ""
+				
+				# Build membership evaluation schedule
+				$sched = Get-Sched
+				
+				# Logic for which collections/deployments to create
+				if(!$Uninstall) {
+					if(!$SkipAvailable) {
+						New-Coll "Available" $collNameBase $limitingColl $sched
+					}
+					else {
+						log "-SkipAvailable was specified. Skipping creation of `"Available`" collection/deployment."
+					}
+					
+					log ""
+					
+					if(!$SkipRequired) {
+						New-Coll "Required" $collNameBase $limitingColl $sched
+					}
+					else {
+						log "-SkipRequired was specified. Skipping creation of `"Required`" collection/deployment."
+					}
+				}
+				else {
+					New-Coll "Uninstall" $collNameBase $limitingColl $sched
 				}
 			}
-			else {
-				New-Coll "Uninstall" $collNameBase $limitingColl $sched
-			}
+			
+			log ""
+			Set-Location $myPWD
 		}
 	}
 	
-	log ""
-	$myPWD = $pwd.path
-	Prep-MECM
-	log ""
-	
 	Do-Stuff
-	
-	log ""
-	Set-Location $myPWD
 	log "EOF"
 	log ""
 }
