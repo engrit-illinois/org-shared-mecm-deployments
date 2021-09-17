@@ -653,6 +653,7 @@ function Remove-TaskSequenceHistory {
 			
 			if(-not $schedules) { Write-Host "            No schedule history was found for given TS." }
 			else {
+				Write-Host "            Found $(@($schedules).count) schedules in the scheduler history for given TS." 
 				Write-Host "        Removing schedule history for given TS..."
 				$schedules | Remove-CimInstance
 				
@@ -662,7 +663,7 @@ function Remove-TaskSequenceHistory {
 				
 				if(-not $schedules2) { Write-Host "            No schedule history was found for given TS." }
 				else {
-					Write-Host "            Schedule history still found for given TS!"
+					Write-Host "            Schedule history still found $(@($schedules).count) schedules in the scheduler history for given TS!"
 				}
 			}
 		}
