@@ -534,7 +534,7 @@ function Invoke-TaskSequence {
 		)
 		
 		Write-Host "        Retrieving local TS advertisements from WMI..."
-		$tsAds = Get-WmiObject -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence"
+		$tsAds = Get-CimInstance -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence"
 		
 		if(-not $tsAds) { Write-Host "            Failed to retrieve local TS advertisements from WMI!" }
 		else {
@@ -566,7 +566,7 @@ function Invoke-TaskSequence {
 				Write-Host "        Triggering TS..."
 				
 				Write-Host "            Retrieving scheduler history from WMI..."
-				$schedulerHistory = Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+				$schedulerHistory = Get-CimInstance -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
 				
 				if(-not $schedulerHistory) { Write-Host "                Failed to retrieve scheduler history from WMI!" }
 				else {
