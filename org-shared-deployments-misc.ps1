@@ -631,7 +631,7 @@ function Remove-TaskSequenceHistory {
 		)
 		
 		function Get-SchedulerHistory {
-			Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+			Get-CimInstance -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
 		}
 		
 		function Get-TsScheduleHistory($history, $ts) {
