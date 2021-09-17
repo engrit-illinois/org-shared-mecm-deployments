@@ -635,7 +635,7 @@ function Remove-TaskSequenceHistory {
 		}
 		
 		function Get-TsScheduleHistory($history, $ts) {
-			$history | Where-Object { ($_.ScheduleID -like "*$($ts)*")
+			$history | Where-Object { ($_.ScheduleID -like "*$($ts)*") }
 		}
 		
 		# Get the scheduler history for the newly modified advertisement and trigger it to run
