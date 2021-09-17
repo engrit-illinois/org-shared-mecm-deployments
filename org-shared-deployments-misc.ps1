@@ -663,7 +663,7 @@ function Remove-TaskSequenceHistory {
 				
 				if(-not $schedules2) { Write-Host "            No schedule history was found for given TS." }
 				else {
-					Write-Host "            Schedule history still found $(@($schedules).count) schedules in the scheduler history for given TS!"
+					Write-Host "            Schedule history still found $(@($schedules2).count) schedules in the scheduler history for given TS!"
 				}
 			}
 		}
