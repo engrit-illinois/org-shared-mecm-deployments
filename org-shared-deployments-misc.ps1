@@ -615,4 +615,83 @@ foreach($int in @(1..10)) {
 
 # -----------------------------------------------------------------------------
 
+# Remove all logged historical runs of a Task Sequence on a client, so that subsequent Required deployments will run, even if they've run before and are not set to "Always rerun".
+# https://msendpointmgr.com/2019/02/14/how-to-rerun-a-task-sequence-in-configmgr-using-powershell/
+# https://www.reddit.com/r/SCCM/comments/iq5t1j/how_to_configure_a_required_task_sequence/
+
+function Remove-TaskSequenceHistory {
+	param(
+		[string]$TsPackageId,
+		[string]$ComputerName
+	)
+
+	$scriptBlock = {
+		param(
+			[string]$TsPackageId
+		)
+		
+		function Get-SchedulerHistory {
+			Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+		}
+		
+		function Get-TsScheduleHistory($history, $ts) {
+			$history | Where-Object { ($_.ScheduleID -like "*$($ts)*")
+		}
+		
+		# Get the scheduler history for the newly modified advertisement and trigger it to run
+		Write-Host "        Retrieving scheduler history from WMI..."
+		$schedulerHistory = Get-SchedulerHistory
+		
+		if(-not $schedulerHistory) { Write-Host "            Failed to retrieve scheduler history from WMI!" }
+		else {
+			
+			Write-Host "        Getting schedule history for given TS..."
+			# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
+			# In this case we want ANY runs of this TS, regardless of which deployment it came from, so we only care about <PackageID> and not <DeploymentID>.
+			# But keep in mind that if there are multiple deployments of this same TS to the client, this may return multiple results.
+			$schedules = Get-TsScheduleHistory $schedulerHistory $TsPackageId
+			
+			if(-not $schedules) { Write-Host "            No schedule history was found for given TS." }
+			else {
+				Write-Host "        Removing schedule history for given TS..."
+				$schedules | Remove-CimInstance
+				
+				Write-Host "        Checking that schedule history has been removed for given TS..."
+				$scheduleHistory2 = Get-SchedulerHistory
+				$schedules2 = Get-TsScheduleHistory $schedulerHistory2 $TsPackageId
+				
+				if(-not $schedules2) { Write-Host "            No schedule history was found for given TS." }
+				else {
+					Write-Host "            Schedule history still found for given TS!"
+				}
+			}
+		}
+	}
+
+	Write-Host "Starting PSSession to `"$ComputerName`"..."
+	$session = New-PSSession -ComputerName $ComputerName
+	Write-Host "    Sending commands to session..."
+	Invoke-Command -Session $session -ScriptBlock $scriptBlock -ArgumentList $TsPackageId,$TsDeploymentId
+	Write-Host "    Done sending commands to session."
+	Write-Host "    Ending session..."
+	Remove-PSSession $session
+	Write-Host "Done."
+}
+
+# Examples:
+
+# Specify the PackageID of the desired TS. Get this from the MECM console.
+$tsPackageId = "MP0028BE"
+
+# Run on one computer
+Invoke-TaskSequence -ComputerName "comp-name-01" -TsPackageId $tsPackageId
+
+# Run on multiple sequential lab computers
+foreach($int in @(1..10)) {
+	$num = ([string]$int).PadLeft(2,"0")
+	$comp = "COMP-NAME-$($num)"
+	Invoke-TaskSequence -ComputerName $comp -TsPackageId $tsPackageId
+}
+
+# -----------------------------------------------------------------------------
 
