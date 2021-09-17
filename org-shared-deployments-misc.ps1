@@ -684,13 +684,13 @@ function Remove-TaskSequenceHistory {
 $tsPackageId = "MP0028BE"
 
 # Run on one computer
-Invoke-TaskSequence -ComputerName "comp-name-01" -TsPackageId $tsPackageId
+Remove-TaskSequenceHistory -ComputerName "comp-name-01" -TsPackageId $tsPackageId
 
 # Run on multiple sequential lab computers
 foreach($int in @(1..10)) {
 	$num = ([string]$int).PadLeft(2,"0")
 	$comp = "COMP-NAME-$($num)"
-	Invoke-TaskSequence -ComputerName $comp -TsPackageId $tsPackageId
+	Remove-TaskSequenceHistory -ComputerName $comp -TsPackageId $tsPackageId
 }
 
 # -----------------------------------------------------------------------------
