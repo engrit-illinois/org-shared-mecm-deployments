@@ -612,6 +612,65 @@ foreach($int in @(1..10)) {
 	Invoke-TaskSequence -ComputerName $comp -TsPackageId $tsPackageId -TsDeploymentId $tsDeploymentId
 }
 
+# -----------------------------------------------------------------------------
+
+# MECM "Script" version of above Invoke-TaskSequence function
+
+param(
+	[string]$TsPackageId,
+	[string]$TsDeploymentId
+)
+
+Write-Host "        Retrieving local TS advertisements from WMI..."
+$tsAds = Get-WmiObject -Namespace "root\ccm\policy\machine\actualconfig" -Class "CCM_TaskSequence"
+
+if(-not $tsAds) { Write-Host "            Failed to retrieve local TS advertisements from WMI!" }
+else {
+	Write-Host "        Getting local advertisement for deployment `"$($TsDeploymentId)`" of TS `"$($TsPackageId)`"..."
+	$tsAd = $tsAds | Where-Object { ($_.PKG_PackageID -eq $TsPackageId) -and ($_.ADV_AdvertisementID -eq $TsDeploymentId) }
+	
+	if(-not $tsAd) { Write-Host "            Failed to get local advertisement!" }
+	else {
+		Write-Host "        Modifying local advertisement..."
+		
+		# Set the RepeatRunBehavior property of this local advertisement to trick the client into thinking it should always rerun, regardless of previous success/failure
+		if($tsAd.ADV_RepeatRunBehavior -notlike "RerunAlways") {
+			Write-Host "            Changing RepeatRunBehavior from `"$($tsAd.ADV_RepeatRunBehavior) to `"RerunAlways`"."
+			$tsAd.ADV_RepeatRunBehavior = "RerunAlways"
+			$tsAd.Put() | Out-Null
+		}
+		else { Write-Host "            RepeatRunBehavior is already `"RerunAlways`"." }
+		
+		# Set the MandatoryAssignments property of this local advertisement to trick the client into thinking it's a Required deployment, regardless of whether it actually is
+		if($tsAd.ADV_MandatoryAssignments -ne $true) {
+			Write-Host "            Changing MandatoryAssignments from `"$($tsAd.ADV_MandatoryAssignments) to `"$true`"."
+			$tsAd.Get()
+			$tsAd.ADV_MandatoryAssignments = $true
+			$tsAd.Put() | Out-Null
+		}
+		else { Write-Host "            MandatoryAssignments is already `"$true`"." }
+		
+		# Get the schedule for the newly modified advertisement and trigger it to run
+		Write-Host "        Triggering TS..."
+		
+		Write-Host "            Retrieving scheduler history from WMI..."
+		$schedulerHistory = Get-WmiObject -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+		
+		if(-not $schedulerHistory) { Write-Host "                Failed to retrieve scheduler history from WMI!" }
+		else {
+			
+			Write-Host "            Getting schedule for local TS advertisement..."
+			# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
+			$scheduleId = $schedulerHistory | Where-Object { ($_.ScheduleID -like "*$($TsPackageId)*") -and ($_.ScheduleID -like "*$($TsDeploymentId)*") } | Select-Object -ExpandProperty ScheduleID
+			
+			if(-not $scheduleId) { Write-Host "                Failed to get schedule for local TS advertisement!" }
+			else {
+				Write-Host "            Triggering schedule for newly-modified local advertisement..."
+				Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+			}
+		}
+	}
+}
 
 # -----------------------------------------------------------------------------
 
@@ -692,6 +751,53 @@ foreach($int in @(1..10)) {
 	$num = ([string]$int).PadLeft(2,"0")
 	$comp = "COMP-NAME-$($num)"
 	Remove-TaskSequenceHistory -ComputerName $comp -TsPackageId $tsPackageId
+}
+
+# -----------------------------------------------------------------------------
+
+# MECM "Script" version of above Remove-TaskSequenceHistory function
+
+param(
+	[string]$TsPackageId,
+	[string]$ComputerName
+)
+	
+function Get-SchedulerHistory {
+	Get-CimInstance -Namespace "root\ccm\scheduler" -Class "CCM_Scheduler_History"
+}
+
+function Get-TsScheduleHistory($history, $ts) {
+	$history | Where-Object { ($_.ScheduleID -like "*$($ts)*") }
+}
+
+# Get the scheduler history for the newly modified advertisement and trigger it to run
+Write-Host "Retrieving scheduler history from WMI..."
+$schedulerHistory = Get-SchedulerHistory
+
+if(-not $schedulerHistory) { Write-Host "    Failed to retrieve scheduler history from WMI!" }
+else {
+	
+	Write-Host "Getting schedule history for given TS..."
+	# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
+	# In this case we want ANY runs of this TS, regardless of which deployment it came from, so we only care about <PackageID> and not <DeploymentID>.
+	# But keep in mind that if there are multiple deployments of this same TS to the client, this may return multiple results.
+	$schedules = Get-TsScheduleHistory $schedulerHistory $TsPackageId
+	
+	if(-not $schedules) { Write-Host "    No schedule history was found for given TS." }
+	else {
+		Write-Host "    Found $(@($schedules).count) schedules in the scheduler history for given TS." 
+		Write-Host "Removing schedule history for given TS..."
+		$schedules | Remove-CimInstance
+		
+		Write-Host "Checking that schedule history has been removed for given TS..."
+		$scheduleHistory2 = Get-SchedulerHistory
+		$schedules2 = Get-TsScheduleHistory $schedulerHistory2 $TsPackageId
+		
+		if(-not $schedules2) { Write-Host "    No schedule history was found for given TS." }
+		else {
+			Write-Host "    Schedule history still found $(@($schedules2).count) schedules in the scheduler history for given TS!"
+		}
+	}
 }
 
 # -----------------------------------------------------------------------------
