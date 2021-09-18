@@ -758,8 +758,7 @@ foreach($int in @(1..10)) {
 # MECM "Script" version of above Remove-TaskSequenceHistory function
 
 param(
-	[string]$TsPackageId,
-	[string]$ComputerName
+	[string]$TsPackageId
 )
 	
 function Get-SchedulerHistory {
