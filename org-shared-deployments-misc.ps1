@@ -522,8 +522,13 @@ foreach($int in @(1..10)) {
 
 function Invoke-TaskSequence {
 	param(
+		[Parameter(Mandatory=$true)]
 		[string]$TsPackageId,
+		
+		[Parameter(Mandatory=$true)]
 		[string]$TsDeploymentId,
+		
+		[Parameter(Mandatory=$true)]
 		[string]$ComputerName
 	)
 
@@ -617,7 +622,10 @@ foreach($int in @(1..10)) {
 # MECM "Script" version of above Invoke-TaskSequence function
 
 param(
+	[Parameter(Mandatory=$true)]
 	[string]$TsPackageId,
+	
+	[Parameter(Mandatory=$true)]
 	[string]$TsDeploymentId
 )
 
@@ -680,7 +688,10 @@ else {
 
 function Remove-TaskSequenceHistory {
 	param(
+		[Parameter(Mandatory=$true)]
 		[string]$TsPackageId,
+		
+		[Parameter(Mandatory=$true)]
 		[string]$ComputerName
 	)
 
@@ -758,6 +769,7 @@ foreach($int in @(1..10)) {
 # MECM "Script" version of above Remove-TaskSequenceHistory function
 
 param(
+	[Parameter(Mandatory=$true)]
 	[string]$TsPackageId
 )
 	
