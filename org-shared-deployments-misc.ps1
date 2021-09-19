@@ -634,6 +634,7 @@ param(
 	[string]$TsDeploymentId,
 	
 	# SCCM scripts don't really support switch parameters, so changing this to a string
+	[Parameter(Mandatory=$true)]
 	[string]$TriggerImmediately = "False"
 )
 
