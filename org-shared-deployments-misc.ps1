@@ -529,7 +529,9 @@ function Invoke-TaskSequence {
 		[string]$TsDeploymentId,
 		
 		[Parameter(Mandatory=$true)]
-		[string]$ComputerName
+		[string]$ComputerName,
+		
+		[switch]$TriggerImmediately
 	)
 
 	$scriptBlock = {
@@ -582,8 +584,11 @@ function Invoke-TaskSequence {
 					
 					if(-not $scheduleId) { Write-Host "                Failed to get schedule for local TS advertisement!" }
 					else {
-						Write-Host "            Triggering schedule for newly-modified local advertisement..."
-						Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+						if(-not $TriggerImmediately) { Write-Host "        -TriggerImmediately was NOT specified." }
+						else {
+							Write-Host "        -TriggerImmediately was specified. Triggering schedule for newly-modified local advertisement..."
+							Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+						}
 					}
 				}
 			}
@@ -626,7 +631,9 @@ param(
 	[string]$TsPackageId,
 	
 	[Parameter(Mandatory=$true)]
-	[string]$TsDeploymentId
+	[string]$TsDeploymentId,
+		
+	[switch]$TriggerImmediately
 )
 
 Write-Host "        Retrieving local TS advertisements from WMI..."
@@ -670,11 +677,14 @@ else {
 			Write-Host "            Getting schedule for local TS advertisement..."
 			# ScheduleIDs look like "<DeploymentID>-<PackageID>-<ScheduleID>"
 			$scheduleId = $schedulerHistory | Where-Object { ($_.ScheduleID -like "*$($TsPackageId)*") -and ($_.ScheduleID -like "*$($TsDeploymentId)*") } | Select-Object -ExpandProperty ScheduleID
-			
+					
 			if(-not $scheduleId) { Write-Host "                Failed to get schedule for local TS advertisement!" }
 			else {
-				Write-Host "            Triggering schedule for newly-modified local advertisement..."
-				Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+				if(-not $TriggerImmediately) { Write-Host "        -TriggerImmediately was NOT specified." }
+				else {
+					Write-Host "        -TriggerImmediately was specified. Triggering schedule for newly-modified local advertisement..."
+					Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
+				}
 			}
 		}
 	}
