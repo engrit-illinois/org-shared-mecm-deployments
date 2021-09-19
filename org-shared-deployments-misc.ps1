@@ -632,8 +632,9 @@ param(
 	
 	[Parameter(Mandatory=$true)]
 	[string]$TsDeploymentId,
-		
-	[switch]$TriggerImmediately
+	
+	# SCCM scripts don't really support switch parameters, so changing this to a string
+	[string]$TriggerImmediately = "False"
 )
 
 Write-Host "        Retrieving local TS advertisements from WMI..."
@@ -680,9 +681,9 @@ else {
 					
 			if(-not $scheduleId) { Write-Host "                Failed to get schedule for local TS advertisement!" }
 			else {
-				if(-not $TriggerImmediately) { Write-Host "        -TriggerImmediately was NOT specified." }
+				if($TriggerImmediately -ne "True") { Write-Host "        -TriggerImmediately was NOT specified as `"True`". Skipping invocation." }
 				else {
-					Write-Host "        -TriggerImmediately was specified. Triggering schedule for newly-modified local advertisement..."
+					Write-Host "        -TriggerImmediately was specified as `"True`". Invoking schedule for newly-modified local advertisement..."
 					Invoke-WmiMethod -Namespace "root\ccm" -Class "SMS_Client" -Name "TriggerSchedule" -ArgumentList $scheduleID
 				}
 			}
