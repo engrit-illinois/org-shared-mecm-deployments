@@ -685,6 +685,7 @@ else {
 # Remove all logged historical runs of a Task Sequence on a client, so that subsequent Required deployments will run, even if they've run before and are not set to "Always rerun".
 # https://msendpointmgr.com/2019/02/14/how-to-rerun-a-task-sequence-in-configmgr-using-powershell/
 # https://www.reddit.com/r/SCCM/comments/iq5t1j/how_to_configure_a_required_task_sequence/
+# https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/sccm-forcing-a-task-sequence-to-rerun/ba-p/322253
 
 function Remove-TaskSequenceHistory {
 	param(
