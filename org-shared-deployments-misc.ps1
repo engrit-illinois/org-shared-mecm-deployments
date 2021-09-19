@@ -730,10 +730,15 @@ function Remove-TaskSequenceHistory {
 				Write-Host "        Checking that schedule history has been removed for given TS..."
 				$scheduleHistory2 = Get-SchedulerHistory
 				$schedules2 = Get-TsScheduleHistory $schedulerHistory2 $TsPackageId
-				
-				if(-not $schedules2) { Write-Host "            No schedule history was found for given TS." }
+		
+				if($schedules2) {
+					Write-Host "    Schedule history still found $(@($schedules2).count) schedules in the scheduler history for given TS!"
+				}
 				else {
-					Write-Host "            Schedule history still found $(@($schedules2).count) schedules in the scheduler history for given TS!"
+					Write-Host "    Successfully removed schedule history for given TS."
+					Write-Host "Restarting CcmExec service..."
+					Get-service -Name "CcmExec" | Restart-Service
+					Write-Host "    Done restarting CcmExec service."
 				}
 			}
 		}
@@ -804,9 +809,14 @@ else {
 		$scheduleHistory2 = Get-SchedulerHistory
 		$schedules2 = Get-TsScheduleHistory $schedulerHistory2 $TsPackageId
 		
-		if(-not $schedules2) { Write-Host "    No schedule history was found for given TS." }
-		else {
+		if($schedules2) {
 			Write-Host "    Schedule history still found $(@($schedules2).count) schedules in the scheduler history for given TS!"
+		}
+		else {
+			Write-Host "    Successfully removed schedule history for given TS."
+			Write-Host "Restarting CcmExec service..."
+			Get-service -Name "CcmExec" | Restart-Service
+			Write-Host "    Done restarting CcmExec service."
 		}
 	}
 }
