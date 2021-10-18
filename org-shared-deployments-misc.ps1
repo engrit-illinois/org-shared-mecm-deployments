@@ -69,6 +69,12 @@ ForEach ($Assignment in $Assignments) {
 
 # -----------------------------------------------------------------------------
 
+# Force MECM client to run the Machine Policy Retrieval and Evaluation Cycle
+
+Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule -ArgumentList '{00000000-0000-0000-0000-000000000021}'
+
+# -----------------------------------------------------------------------------
+
 # Find the difference between two MECM collections:
 $one = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 1" | Select Name).Name
 $two = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 2" | Select Name).Name
