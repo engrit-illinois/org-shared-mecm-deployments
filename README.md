@@ -34,7 +34,7 @@ This is not official MECM terminology, but we call these "deployment collections
 - Created collections will show up in the root of `\Assets and Compliance\Overview\Device Collections` because the ConfigurationManager Powershell module is incapable of knowing about or manipulating folders. You must manually move them to the appropriate folder using the admin console.  
   - For org-level collections, this is the appropriate subfolder of `\Assets and Compliance\Overview\Device Collections\UIUC-ENGR\Org shared collections\Deployments`.
   - For IS collections, this is `\Assets and Compliance\Overview\Device Collections\UIUC-ENGR\Instructional\Deployment Collections\Software\Installs`.
-- Note: The target apps must be distributed to your distribution point before running this module to create collections. If it's not, the collections will be created, but the deployments to those collections will not. If this happens, simply delete the newly-created collections, distribute the app, and run the module again.
+- Note: The target app must be distributed to your distribution point before running this module to create collections. If it's not, the collections will be created, but the deployments to those collections will not. If this happens, simply delete the newly-created collections, distribute the app, and run the module again.
 
 ### Example usage
 
