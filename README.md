@@ -21,7 +21,7 @@ Read and understand the code before using.
 # New-CMOrgModelDeploymentCollection.psm1
 
 This is a module that takes a target application name, creates _standardized_ collections and deploys the target application to those collections.  
-This is not official MECM terminology, but we call these "deployment collections" because the collection's sole purpose is to be the single point of deployment for a given app, and any collections which should receive this deployment should simply be added as in include rule in the collection's membership rules. As described on the wiki page above, this prevents the same application from being redundantly deployed to many, many scattered collections.  
+This is not official MECM terminology, but we call these "deployment collections" because the collection's sole purpose is to be the single point of deployment for a given app, and any collections which should receive this deployment should simply be added as an include rule in the collection's membership rules. As described on the wiki page above, this prevents the same application from being redundantly deployed to many scattered collections.  
 
 ### Behavior
 
@@ -31,9 +31,10 @@ This is not official MECM terminology, but we call these "deployment collections
   - Supersedence is preferred. If you must deploy without supersedence, please do so manually.  
 - By default, the created collections will have a limiting collection of `UIUC-ENGR-All Systems`, unless the `-ISOnly` switch parameter is specified.  
 - Created collections will have a standard name format of `UIUC-ENGR-Deploy <app> (<purpose>)`, unless the `-ISOnly` switch parameter is specified.  
-- Created collections will show up in the root of `\Assets and Compliance\Overview\Device Collections` because the ConfigurationManager Powershell module is incapable of knowing about or manipulating folders. Please move them to the appropriate folder.  
+- Created collections will show up in the root of `\Assets and Compliance\Overview\Device Collections` because the ConfigurationManager Powershell module is incapable of knowing about or manipulating folders. You must manually move them to the appropriate folder using the admin console.  
   - For org-level collections, this is the appropriate subfolder of `\Assets and Compliance\Overview\Device Collections\UIUC-ENGR\Org shared collections\Deployments`.
   - For IS collections, this is `\Assets and Compliance\Overview\Device Collections\UIUC-ENGR\Instructional\Deployment Collections\Software\Installs`.
+- Note: The target apps must be distributed to your distribution point before running this module to create collections. If it's not, the collections will be created, but the deployments to those collections will not. If this happens, simply delete the newly-created collections, distribute the app, and run the module again.
 
 ### Example usage
 
