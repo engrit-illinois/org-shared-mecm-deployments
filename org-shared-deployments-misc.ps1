@@ -842,3 +842,24 @@ else {
 
 # -----------------------------------------------------------------------------
 
+# Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
+
+# For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
+# This causes Powershell to wait for them to finish, in order to capture all the output.
+./setup.exe /parameter "value" | Out-Null
+
+# Alternatively you can use Start-Process -Wait. However this makes the syntax more complex and may not be compatible with every syntax, mostly due to quotation/escaping issues.
+Start-Process -Wait "./setup.exe" -ArgumentList "/parameter value"
+
+# For executables which kick off other executables, but do not wait for them to finish, you may need to implement a loop to identify and wait for the last executable in the line:
+while(Get-Process -Name "setup") {
+	Start-Sleep -Seconds 5
+}
+
+# Or, if the executable filename is somewhat generic, like "setup.exe", consider targeting the Description/display name instead:
+while(Get-Process | Where {$_.Description -eq "Visual Studio Installer"}) {
+	Start-Sleep -Seconds 5
+}
+
+# -----------------------------------------------------------------------------
+
