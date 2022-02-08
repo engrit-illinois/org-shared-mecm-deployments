@@ -238,7 +238,7 @@ $apps | Select ApplicationName,UpdateSupersedence
 # More handy, consolidated function for creating standarized org-shared-model deployment collections
 # This has been turned into a proper Powershell module. Please see the "New-CMOrgModelDeploymentCollection" section in the README here: 
 
-# https://gitlab.engr.illinois.edu/engrit-epm/org-shared-deployments/-/tree/master
+# https://github.com/engrit-illinois/org-shared-mecm-deployments#new-cmorgmodeldeploymentcollectionpsm1
 
 # -----------------------------------------------------------------------------
 
