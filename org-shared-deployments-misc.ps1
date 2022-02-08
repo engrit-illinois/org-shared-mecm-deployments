@@ -862,5 +862,18 @@ while(Get-Process | Where {$_.Description -eq "Visual Studio Installer"}) {
 	Start-Sleep -Seconds 5
 }
 
+# Here's an example of how to handle an (un)installer named "Uninstall.exe" which kicks off a secondary executable named "Un_A.exe" and then exits:
+# This comes from the uninstaller for Cura LulzBot Edition 3.6.23.
+
+# Kick off parent uninstall executable.
+# We pipe to Out-Null to ensure that the child executable is running before we start waiting for it.
+# Otherwise the while loop will exit prematurely.
+.\Uninstall.exe /S | Out-Null
+while(Get-Process -Name "Un_A" -ErrorAction "SilentlyContinue") {
+    Write-Host "Uninstall running..."
+    Start-Sleep -Seconds 1
+}
+Write-Host "Uninstall finished."
+
 # -----------------------------------------------------------------------------
 
