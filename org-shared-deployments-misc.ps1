@@ -845,7 +845,8 @@ else {
 # Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
 
 # For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
-# This causes Powershell to wait for them to finish, in order to capture all the output.
+# This causes Powershell to wait for them to finish, in order to "capture" all the output.
+# https://stackoverflow.com/a/1742758
 ./setup.exe /parameter "value" | Out-Null
 
 # Alternatively you can use Start-Process -Wait. However this makes the syntax more complex and may not be compatible with every syntax, mostly due to quotation/escaping issues.
