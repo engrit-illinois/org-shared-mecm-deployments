@@ -866,7 +866,7 @@ while(Get-Process | Where {$_.Description -eq "Visual Studio Installer"}) {
 # This comes from the uninstaller for Cura LulzBot Edition 3.6.23.
 # We pipe the parent executable to Out-Null to ensure that the child executable is running before we start waiting for it.
 # Otherwise the while loop will exit prematurely.
-.\Uninstall.exe /S | Out-Null
+& "C:\Program Files (x86)\cura-lulzbot 3.6\Uninstall.exe" /S | Out-Null
 while(Get-Process -Name "Un_A" -ErrorAction "SilentlyContinue") {
     Write-Host "Uninstall running..."
     Start-Sleep -Seconds 1
