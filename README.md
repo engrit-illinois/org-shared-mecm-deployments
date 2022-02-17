@@ -4,7 +4,7 @@ Some miscellaneous snippets and a few custom modules related to maintaining the 
 Org shared deployment model documentation home: https://wiki.illinois.edu/wiki/display/engritprivate/SCCM+-+Org+shared+collections+and+deployments  
 
 # Requirements
-- Currently these custom modules have only been written for and tested with Powershell 5.1. While modern versions of Configuration Manager [support Powershell 7](https://docs.microsoft.com/en-us/powershell/sccm/overview?view=sccm-ps#support-for-powershell-version-7), there are apparently some differences which these scripts do not account for, and there are known Powershell 7 compatibility issues with at least New-CMOrgModelDeploymentCollection.psm1, and possible others.  
+Currently these custom modules have only been written for and tested with Powershell 5.1. While modern versions of Configuration Manager [support Powershell 7](https://docs.microsoft.com/en-us/powershell/sccm/overview?view=sccm-ps#support-for-powershell-version-7), there are apparently some differences which these scripts do not account for, and there are known Powershell 7 compatibility issues with at least New-CMOrgModelDeploymentCollection.psm1, and possibly others.  
 
 # org-shared-deployments-misc.ps1
 
