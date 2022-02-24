@@ -23,6 +23,10 @@ https://github.com/engrit-illinois/Prep-MECM
 A module for creating standardized deployment collections  
 https://github.com/engrit-illinois/New-CMOrgModelDeploymentCollection  
 
+### Invoke-TaskSequence
+Triggers an MECM Task Sequence on one or more remote computers by communicating directly with their MECM client.
+https://github.com/engrit-illinois/Invoke-TaskSequence
+
 ### Get-CollsWhichIncludeColl
 A module to return the list of collections in which a given collection is included  
 https://github.com/engrit-illinois/Get-CMCollsWhichIncludeColl  
