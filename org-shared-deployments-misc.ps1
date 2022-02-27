@@ -774,3 +774,13 @@ Write-Host "Uninstall finished."
 
 # -----------------------------------------------------------------------------
 
+# Get OS/build for all machines in a set of collections matching a given name query and export to a CSV:
+Get-CMCollection -Name "UIUC-ENGR-EOL Win7 ESU Baseline (*" | Select -ExpandProperty Name | ForEach-Object {
+    $coll = $_
+    Get-CMCollectionMember -CollectionName $_ | Select Name,DeviceOS,DeviceOSBuild | ForEach-Object {
+        $_ | Add-Member -NotePropertyName "Collection" -NotePropertyValue $coll -Force -PassThru
+    }
+} | Export-Csv -NoTypeInformation -Encoding "Ascii" -Path "c:\engrit\temp\Win7ESU.csv"
+
+# -----------------------------------------------------------------------------
+
