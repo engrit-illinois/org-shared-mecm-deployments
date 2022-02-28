@@ -105,6 +105,29 @@ Get-CMDeviceCollection -Name $coll | Set-CMDeviceCollection -NewName $newname
 
 # -----------------------------------------------------------------------------
 
+# Get all MECM Collections named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
+
+$colls = Get-CMCollection | Where { $_.Name -like "UIUC-ENGR *" }
+$colls | ForEach {
+	$name = $_.Name
+	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
+	Write-Host "Renaming collection `"$name`" to `"$newname`"..."
+	Set-CMCollection -Name $name -NewName $newname
+}
+
+# -----------------------------------------------------------------------------
+
+# Get all MECM Applications named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
+$apps = Get-CMApplication -Fast | Where { $_.LocalizedDisplayName -like "UIUC-ENGR *" }
+$apps | ForEach {
+	$name = $_.LocalizedDisplayName
+	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
+	Write-Host "Renaming app `"$name`" to `"$newname`"..."
+	Set-CMApplication -Name $name -NewName $newname
+}
+
+# -----------------------------------------------------------------------------
+
 # Get all relevant collections so they can be used in a foreach loop with the below commands
 # Be very careful to check that you're actually getting ONLY the collections you want with this, before relying on the list of returned collections to make changes. It would have made it easier to rely on this if I had designed these collections to have a standard prefix, but I wanted to keep the UIUC-ENGR-App Name format to make it crystal clear that these are to be used as the primary org collections/deployments for these apps. Unfortunately the ConfigurationManager powershell module doesn't have any support for working with folders (known as container nodes).
 $collsAvailable = (Get-CMCollection -Name "Deploy * - Latest (Available)" | Select Name).Name
@@ -128,6 +151,12 @@ foreach($coll in $colls) {
 	# Set the refresh schedule
 	Set-CMCollection -Name $coll -RefreshType "Periodic" -RefreshSchedule $sched
 }
+
+# -----------------------------------------------------------------------------
+
+# Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
+$sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
+Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
 
 # -----------------------------------------------------------------------------
 
@@ -299,32 +328,6 @@ $collsCustom = $colls | Select Name,RefreshType,@{
     }
 }
 $collsCustom | Format-Table
-
-# -----------------------------------------------------------------------------
-
-# Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
-$sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
-Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
-
-# -----------------------------------------------------------------------------
-
-# Get all MECM Collections and apps named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
-
-$colls = Get-CMCollection | Where { $_.Name -like "UIUC-ENGR *" }
-$colls | ForEach {
-	$name = $_.Name
-	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
-	Write-Host "Renaming collection `"$name`" to `"$newname`"..."
-	Set-CMCollection -Name $name -NewName $newname
-}
-
-$apps = Get-CMApplication -Fast | Where { $_.LocalizedDisplayName -like "UIUC-ENGR *" }
-$apps | ForEach {
-	$name = $_.LocalizedDisplayName
-	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
-	Write-Host "Renaming app `"$name`" to `"$newname`"..."
-	Set-CMApplication -Name $name -NewName $newname
-}
 
 # -----------------------------------------------------------------------------
 
