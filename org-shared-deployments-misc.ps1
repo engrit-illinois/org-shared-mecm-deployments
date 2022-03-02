@@ -116,28 +116,6 @@ $colls = $collsAvailable + $collsRequired
 
 # -----------------------------------------------------------------------------
 
-# Define a refresh schedule of daily at 1am
-# https://docs.microsoft.com/en-us/powershell/module/configurationmanager/set-cmcollection
-# https://docs.microsoft.com/en-us/powershell/module/configurationmanager/new-cmschedule
-# https://www.danielengberg.com/sccm-powershell-script-update-collection-schedule/
-# https://gallery.technet.microsoft.com/Powershell-script-to-set-5d1c52f1
-# https://stackoverflow.com/questions/10487011/creating-a-datetime-object-with-a-specific-utc-datetime-in-powershell/44196630
-# https://hinchley.net/articles/create-a-collection-in-sccm-with-a-weekly-refresh-cycle/
-$sched = New-CMSchedule -Start "2020-07-27 01:00" -RecurInterval "Days" -RecurCount 1
-
-foreach($coll in $colls) {
-	# Set the refresh schedule
-	Set-CMCollection -Name $coll -RefreshType "Periodic" -RefreshSchedule $sched
-}
-
-# -----------------------------------------------------------------------------
-
-# Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
-$sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
-Get-CMDeviceCollection | Where { $_.Name -like "UIUC-ENGR-CollectionName*" } | Set-CMCollection -RefreshSchedule $sched
-
-# -----------------------------------------------------------------------------
-
 # Adding and removing membership rules
 
 # https://docs.microsoft.com/en-us/powershell/module/configurationmanager/add-cmdevicecollectionincludemembershiprule
@@ -289,8 +267,33 @@ $collsWithDailySchedules | Format-Table
 
 # -----------------------------------------------------------------------------
 
+# Define a refresh schedule of daily at 1am
+# https://docs.microsoft.com/en-us/powershell/module/configurationmanager/set-cmcollection
+# https://docs.microsoft.com/en-us/powershell/module/configurationmanager/new-cmschedule
+# https://www.danielengberg.com/sccm-powershell-script-update-collection-schedule/
+# https://gallery.technet.microsoft.com/Powershell-script-to-set-5d1c52f1
+# https://stackoverflow.com/questions/10487011/creating-a-datetime-object-with-a-specific-utc-datetime-in-powershell/44196630
+# https://hinchley.net/articles/create-a-collection-in-sccm-with-a-weekly-refresh-cycle/
+$sched = New-CMSchedule -Start "2020-07-27 01:00" -RecurInterval "Days" -RecurCount 1
+
+# -----------------------------------------------------------------------------
+
+# Get all MECM device collections named like "UIUC-ENGR-CollectionName*" and set their refresh schedule to daily at 3am, starting 2020-08-28
+# This also removes "incremental updates"
+$sched = New-CMSchedule -Start "2020-08-28 03:00" -RecurInterval "Days" -RecurCount 1
+$comps = Get-CMDeviceCollection -Name "UIUC-ENGR-CollectionName*"
+Write-Host ($comps | Select Name)
+$confirm = Read-Host "Change refresh time on these collections? Enter y or n"
+if(($confirm -eq "y") -or ($confirm -eq "Y")) {
+	$comps | Set-CMCollection -RefreshType "Periodic" -RefreshSchedule $sched
+}
+
+# -----------------------------------------------------------------------------
+
 # Find collections which have "incremental updates" enabled
 # https://www.danielengberg.com/sccm-powershell-script-update-collection-schedule/
+# https://docs.microsoft.com/en-us/mem/configmgr/develop/reference/core/clients/collections/sms_collection-server-wmi-class#refreshschedule
+
 $refreshTypes = @{
     1 = "Manual Update Only"
     2 = "Scheduled Updates Only"
