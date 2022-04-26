@@ -151,37 +151,16 @@ $rules = Get-CMDeviceCollectionMembershipRuleCounts "UIUC-ENGR-Deploy 7-Zip x64 
 
 # -----------------------------------------------------------------------------
 
-# Adding a new properly-configured collection for each of "available" and "required"
-$app = "App x64 - Latest"
-$purposes = @("Available","Required")
-foreach($purpose in $purposes) {
-    # Make new collection
-    $coll = "UIUC-ENGR-Deploy $app ($purpose)"
-    $sched = New-CMSchedule -Start "2020-07-27 01:00" -RecurInterval "Days" -RecurCount 1
-    New-CMDeviceCollection -Name $coll -LimitingCollectionName "UIUC-ENGR-All Systems" -RefreshType "Periodic" -RefreshSchedule $sched
-    
-    # Comment this out if this isn't going to be a "common" app
-    #Get-CMCollection -Name $coll | Add-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName "UIUC-ENGR-Deploy ^ All Common Apps - Latest ($purpose)"
-
-    # Deploying the app
-    # https://docs.microsoft.com/en-us/powershell/module/configurationmanager/new-cmapplicationdeployment
-    # https://www.reddit.com/r/SCCM/comments/9bknh0/newcmapplicationdeployment_help/
-    Start-Sleep -Seconds 10 # If performing immediate after creating the collection
-    New-CMApplicationDeployment -Name $app -CollectionName $coll -DeployAction "Install" -DeployPurpose $purpose -UpdateSupersedence $true
-}
-
-# Note: new collections created via Powershell will end up in the root of "Device Collections" and will need to be manually moved to the appropriate folder
-# Currently there is no support for management of the folder hierarchy in the ConfigurationManager Powershell module.
-
-# -----------------------------------------------------------------------------
-
 # Adding a collection as a member of a roll up collection
 Get-CMCollection -Name "UIUC-ENGR-Deploy ^ All Common Apps - Latest (<purpose>)" | Add-CMDeviceCollectionIncludeMembershipRule -IncludeCollectionName "UIUC-ENGR-Collection to add"
 
 # -----------------------------------------------------------------------------
 
-# Find all collections which have an "include" membership rule that includes a target collection:
-# https://configurationmanager.uservoice.com/forums/300492-ideas/suggestions/15827071-collection-deployment
+# Find all collections which have an "include" membership rule that includes a target collection,
+# i.e. find all collections which include the given collection.
+
+# This was turned into its own module, here: https://github.com/engrit-illinois/Get-CMCollsWhichIncludeColl
+# However the core underlying code is pretty simple, so here it is:
 
 $targetColl = "UIUC-ENGR-Target Collection"
 $targetCollId = (Get-CMCollection -Name $targetColl).CollectionId
@@ -221,9 +200,7 @@ $apps | Select ApplicationName,UpdateSupersedence
 # -----------------------------------------------------------------------------
 
 # More handy, consolidated function for creating standarized org-shared-model deployment collections
-# This has been turned into a proper Powershell module. Please see the "New-CMOrgModelDeploymentCollection" section in the README here: 
-
-# https://github.com/engrit-illinois/org-shared-mecm-deployments#new-cmorgmodeldeploymentcollectionpsm1
+# This was turned into its own module, here: https://github.com/engrit-illinois/New-CMOrgModelDeploymentCollection
 
 # -----------------------------------------------------------------------------
 
