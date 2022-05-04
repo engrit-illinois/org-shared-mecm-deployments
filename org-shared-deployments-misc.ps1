@@ -702,6 +702,22 @@ else {
 
 # -----------------------------------------------------------------------------
 
+# Remotely kick off an application install/uninstall deployed as Available
+# https://timmyit.com/2016/08/08/sccm-and-powershell-force-installuninstall-of-available-software-in-software-center-through-cimwmi-on-a-remote-client/
+
+$ComputerName = "computer-name"
+$AppName = "Full app package name"
+$Method = "Install" # Or "Uninstall"
+
+$app = (Get-CimInstance -ClassName CCM_Application -Namespace "root\ccm\clientSDK" -ComputerName $ComputerName | Where-Object {$_.Name -like $AppName})
+$args = @{
+	Id = "$($app.id)"
+	Revision = "$($app.Revision)"
+}
+Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -ComputerName $ComputerName -MethodName $Method -Arguments $args
+
+# -----------------------------------------------------------------------------
+
 # Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
 
 # For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
