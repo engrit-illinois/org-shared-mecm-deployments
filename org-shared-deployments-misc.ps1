@@ -754,6 +754,15 @@ Write-Host "Uninstall finished."
 
 # -----------------------------------------------------------------------------
 
+# How to exit a script used as the install method for an application deployment type so that the exit code can actually be retrieved by SCCM
+# Custom exit codes can then be defined in the deployment type's "Return Codes" tab
+# https://www.reddit.com/r/SCCM/comments/ds1fnh/sending_exit_codes_to_cm_through_powershell/
+# https://stackoverflow.com/questions/50200325/returning-an-exit-code-from-a-powershell-script
+$host.SetShouldExit($exitcode)
+Exit $exitcode
+
+# -----------------------------------------------------------------------------
+
 # Get OS/build for all machines in a set of collections matching a given name query and export to a CSV:
 Get-CMCollection -Name "UIUC-ENGR-EOL Win7 ESU Baseline (*" | Select -ExpandProperty Name | ForEach-Object {
     $coll = $_
