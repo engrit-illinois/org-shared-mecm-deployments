@@ -718,6 +718,11 @@ Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -Com
 
 # -----------------------------------------------------------------------------
 
+# Rules for how writing Powershell-based detection methods
+# https://www.danielengberg.com/detect-text-file-content-using-powershell-detection-method-sccm/
+
+# -----------------------------------------------------------------------------
+
 # Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
 
 # For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
