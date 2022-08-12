@@ -2,6 +2,7 @@
 See: https://www.danielengberg.com/detect-text-file-content-using-powershell-detection-method-sccm/
  
  | Script exit code | Data read from STDOUT | Data read from STDERR | Script result | Application detection state | 
+ | ---------------- | --------------------- | --------------------- | ------------- | --------------------------- | 
  | 0 | Empty | Empty | Success | Not installed | 
  | 0 | Empty | Not empty | Failure | Unknown | 
  | 0 | Not empty | Empty | Success | Installed | 
