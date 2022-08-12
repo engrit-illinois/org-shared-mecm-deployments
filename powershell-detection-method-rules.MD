@@ -14,6 +14,7 @@ See: https://www.danielengberg.com/detect-text-file-content-using-powershell-det
  
 The most relevant lines here are:
  | Script exit code | Data read from STDOUT | Data read from STDERR | Script result | Application detection state | 
+ | ---------------- | --------------------- | --------------------- | ------------- | --------------------------- | 
  | 0 | Empty | Empty | Success | Not installed | 
  | 0 | Not empty | Empty | Success | Installed | 
  | 0 | Not empty | Not empty | Success | Installed | 
