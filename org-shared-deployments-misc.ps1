@@ -719,17 +719,7 @@ Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -Com
 # -----------------------------------------------------------------------------
 
 # Rules for how writing Powershell-based detection methods
-# https://www.danielengberg.com/detect-text-file-content-using-powershell-detection-method-sccm/
-
- | Script exit code | Data read from STDOUT | Data read from STDERR | Script result | Application detection state | 
- | 0 | Empty | Empty | Success | Not installed | 
- | 0 | Empty | Not empty | Failure | Unknown | 
- | 0 | Not empty | Empty | Success | Installed | 
- | 0 | Not empty | Not empty | Success | Installed | 
- | Non-zero value | Empty | Empty | Failure | Unknown | 
- | Non-zero value | Empty | Not empty | Failure Unknown | 
- | Non-zero value | Not empty | Empty | Failure Unknown | 
- | Non-zero value | Not empty | Not empty | Failure Unknown | 
+# https://github.com/engrit-illinois/org-shared-mecm-deployments/blob/main/powershell-detection-method-rules.MD
 
 # -----------------------------------------------------------------------------
 
