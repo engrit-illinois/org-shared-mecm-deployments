@@ -716,6 +716,25 @@ $args = @{
 }
 Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -ComputerName $ComputerName -MethodName $Method -Arguments $args
 
+# -----------------------------------
+
+# Do the same on multiple machines, in parallel:
+$comps = Get-ADComputer -Filter { Name -like "cb-322-*" }
+$comps.Name | ForEach-Object -ThrottleLimit 15 -Parallel {
+	Write-Host "Processing $_..."
+	Invoke-Command -ComputerName $_ -ScriptBlock {
+		$AppName = "ANSYS 2022 R2 Academic Mechanical"
+		$Method = "Install" # Or "Uninstall"
+
+		$app = (Get-CimInstance -ClassName CCM_Application -Namespace "root\ccm\clientSDK" | Where-Object {$_.Name -like $AppName})
+		$args = @{
+			Id = "$($app.id)"
+			Revision = "$($app.Revision)"
+		}
+		Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -MethodName $Method -Arguments $args
+	}
+}
+
 # -----------------------------------------------------------------------------
 
 # Rules for how writing Powershell-based detection methods
