@@ -755,6 +755,10 @@ $comps.Name | ForEach-Object -ThrottleLimit 15 -Parallel {
 # Alternatively you can use Start-Process -Wait. However this makes the syntax more complex and may not be compatible with every syntax, mostly due to quotation/escaping issues.
 Start-Process -Wait ".\setup.exe" -ArgumentList "/parameter value"
 
+# Another alternative is Wait-Process
+& ".\folder name\setup.exe" /parameter "value"
+Wait-Process -Name "setup"
+
 # For executables which kick off other executables, but do not wait for them to finish, you may need to implement a loop to identify and wait for the last executable in the line:
 while(Get-Process -Name "setup") {
 	Start-Sleep -Seconds 5
