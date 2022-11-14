@@ -59,6 +59,10 @@ https://github.com/engrit-illinois/Get-CMCollectionMembersWithAdOus
 Retrieve all college computer name prefixes used by your "All Systems" collection to determine which newly imported computer objects to include  
 https://github.com/engrit-illinois/Get-MecmCollegePrefixes  
 
+### Get-MacsFromSmsPxeLog
+Pulls our SMSPXE log from the \\engr-mecmdp-01\logs share and pulls just the MACs, to help identify bootlooping machines.  
+https://github.com/engrit-illinois/Get-MacsFromSmsPxeLog  
+
 ### force-mecm-baseline-evaluation
 Force a list of remote MECM client to re-evaluate their configuration baselines  
 https://github.com/engrit-illinois/force-mecm-baseline-evaluation  
