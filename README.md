@@ -60,7 +60,7 @@ Retrieve all college computer name prefixes used by your "All Systems" collectio
 https://github.com/engrit-illinois/Get-MecmCollegePrefixes  
 
 ### Get-MacsFromSmsPxeLog
-Pulls our SMSPXE log from the \\engr-mecmdp-01\logs share and pulls just the MACs, to help identify bootlooping machines.  
+Pulls our SMSPXE log from the \\engr-mecmdp-01\logs share and pulls the MACs and some stats, to help identify bootlooping machines.  
 https://github.com/engrit-illinois/Get-MacsFromSmsPxeLog  
 
 ### force-mecm-baseline-evaluation
