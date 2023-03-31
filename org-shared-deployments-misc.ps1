@@ -12,6 +12,15 @@ Exit
 
 # -----------------------------------------------------------------------------
 
+# Commandline to run a custom script as the "Installation program" for an MECM app
+PowerShell.exe -ExecutionPolicy Bypass -File .\install.ps1
+
+# Sometimes you can get away with just
+install.ps1 # or .\install.ps1
+# But sometimes it won't run properly without the full syntax
+
+# -----------------------------------------------------------------------------
+
 # Prepare a connection to SCCM so you can directly use ConfigurationManager Powershell cmdlets without opening the admin console app
 # This has been moved to its own repo here: https://github.com/engrit-illinois/Prep-MECM
 
