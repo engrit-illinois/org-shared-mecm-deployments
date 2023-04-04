@@ -813,8 +813,8 @@ Get-CMCollection -Name "UIUC-ENGR-EOL Win7 ESU Baseline (*" | Select -ExpandProp
 # Find occurrences of a string in any text file in a folder
 # https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/findstr
 
-# Find all occurrence of "TracePro" in all MECM logs on engrit-mms-tvm0:
-findstr /s /i TracePro \\engrit-mms-tvm0\c$\windows\ccm\logs\*.*
+# Find all occurrences of "TracePro" in all MECM logs on engrit-mms-tvm0:
+findstr /s /i /n TracePro \\engrit-mms-tvm0\c$\windows\ccm\logs\*.*
 
 # List only the files, omitting the actual content:
 findstr /s /i /m TracePro \\engrit-mms-tvm0\c$\windows\ccm\logs\*.*
