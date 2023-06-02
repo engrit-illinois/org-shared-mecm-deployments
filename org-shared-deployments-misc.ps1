@@ -95,7 +95,7 @@ Get-CMDeviceCollection -Name $coll | Set-CMDeviceCollection -NewName $newname
 # Get all MECM Collections named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
 
 $colls = Get-CMCollection | Where { $_.Name -like "UIUC-ENGR *" }
-$colls | ForEach {
+$colls | ForEach-Object {
 	$name = $_.Name
 	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
 	Write-Host "Renaming collection `"$name`" to `"$newname`"..."
@@ -106,11 +106,22 @@ $colls | ForEach {
 
 # Get all MECM Applications named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
 $apps = Get-CMApplication -Fast | Where { $_.LocalizedDisplayName -like "UIUC-ENGR *" }
-$apps | ForEach {
+$apps | ForEach-Object {
 	$name = $_.LocalizedDisplayName
 	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
 	Write-Host "Renaming app `"$name`" to `"$newname`"..."
 	Set-CMApplication -Name $name -NewName $newname
+}
+
+# -----------------------------------------------------------------------------
+
+# Get all MECM Task Sequences named like "UIUC-ENGR-Instructional 2022c v1.1d*" and rename them to "UIUC-ENGR-Instructional 2022c v1.1e*"
+$tses = Get-CMTaskSequence -Fast -Name "UIUC-ENGR-Instructional 2022c v1.1d*"
+$tses | ForEach-Object {
+    $name = $_.Name
+    $newname = $name.Replace("v1.1d","v1.1e")
+    Write-Host "Renaming TS `"$name`" to `"$newname`"..."
+    Set-CMTaskSequence -Name $name -NewName $newname
 }
 
 # -----------------------------------------------------------------------------
@@ -816,4 +827,5 @@ Get-CMCollection -Name "UIUC-ENGR-EOL Win7 ESU Baseline (*" | Select -ExpandProp
 Select-String -Path "\\engrit-mms-tvm0\c$\windows\ccm\logs\*.*" -Pattern "TracePro" | Select Filename,LineNumber,Line | Sort Filename,LineNumber | Format-Table -Wrap
 
 # -----------------------------------------------------------------------------
+
 
