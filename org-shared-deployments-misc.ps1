@@ -61,6 +61,7 @@ Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule -Ar
 
 # Invoke-WMIMethod (and similar) are deprecated. Here's the Invoke-CimInstance equivalent
 # https://stackoverflow.com/questions/58828105/converting-invoke-wmimethod-command-to-invoke-cimmethod-command
+# Untested. Might need some troubleshooting. Getting error 0x8004101e
 Invoke-CimMethod -ComputerName "comp-name-01" -Namespace "root\ccm" -ClassName "sms_client" -Name "triggerschedule" -Arguments @{ sScheduleid = '{00000000-0000-0000-0000-000000000021}' }
 
 # -----------------------------------------------------------------------------
