@@ -57,8 +57,11 @@ ForEach ($Assignment in $Assignments) {
 # -----------------------------------------------------------------------------
 
 # Force MECM client to run the Machine Policy Retrieval and Evaluation Cycle
-
 Invoke-WMIMethod -Namespace root\ccm -Class SMS_CLIENT -Name TriggerSchedule -ArgumentList '{00000000-0000-0000-0000-000000000021}'
+
+# Invoke-WMIMethod (and similar) are deprecated. Here's the Invoke-CimInstance equivalent
+# https://stackoverflow.com/questions/58828105/converting-invoke-wmimethod-command-to-invoke-cimmethod-command
+Invoke-CimMethod -ComputerName "comp-name-01" -Namespace "root\ccm" -ClassName "sms_client" -Name "triggerschedule" -Arguments @{ sScheduleid = '{00000000-0000-0000-0000-000000000021}' }
 
 # -----------------------------------------------------------------------------
 
