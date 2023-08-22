@@ -19,6 +19,11 @@ PowerShell.exe -ExecutionPolicy Bypass -File .\install.ps1
 install.ps1 # or .\install.ps1
 # But sometimes it won't run properly without the full syntax
 
+# To pass arguments:
+PowerShell.exe -ExecutionPolicy Bypass -File .\install-uninstall.ps1 -Install
+# or
+PowerShell.exe -ExecutionPolicy Bypass -File .\install.ps1 -Param1 value
+
 # -----------------------------------------------------------------------------
 
 # Prepare a connection to SCCM so you can directly use ConfigurationManager Powershell cmdlets without opening the admin console app
