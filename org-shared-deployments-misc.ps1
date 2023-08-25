@@ -733,7 +733,8 @@ else {
 
 # Remotely kick off an application install/uninstall deployed as Available
 # https://timmyit.com/2016/08/08/sccm-and-powershell-force-installuninstall-of-available-software-in-software-center-through-cimwmi-on-a-remote-client/
-# Note: this won't work on apps which don't work when deployed as Required, such as ANSYS Mechanical 2022R2/2023R2.
+# Note: this won't work (remotely) on apps which don't work when deployed as Required, such as ANSYS Mechanical 2022R2/2023R2, even if you're logged into the machine.
+# Removing the "-ComputerName" parameters and running the code locally while logged into the target machine does work, but at that point, you may as well just use Software Center.
 
 $ComputerName = "computer-name"
 $AppName = "Full localized app name"
