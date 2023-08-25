@@ -733,9 +733,10 @@ else {
 
 # Remotely kick off an application install/uninstall deployed as Available
 # https://timmyit.com/2016/08/08/sccm-and-powershell-force-installuninstall-of-available-software-in-software-center-through-cimwmi-on-a-remote-client/
+# Note: this won't work on apps which don't work when deployed as Required, such as ANSYS Mechanical 2022R2/2023R2.
 
 $ComputerName = "computer-name"
-$AppName = "Full app package name"
+$AppName = "Full localized app name"
 $Method = "Install" # Or "Uninstall"
 
 $app = (Get-CimInstance -ClassName CCM_Application -Namespace "root\ccm\clientSDK" -ComputerName $ComputerName | Where-Object {$_.Name -like $AppName})
@@ -748,11 +749,11 @@ Invoke-CimMethod -Namespace "root\ccm\clientSDK" -ClassName CCM_Application -Com
 # -----------------------------------
 
 # Do the same on multiple machines, in parallel:
-$comps = Get-ADComputer -Filter { Name -like "cb-322-*" }
+$comps = Get-ADComputer -Filter { Name -like "comp-name-*" }
 $comps.Name | ForEach-Object -ThrottleLimit 15 -Parallel {
 	Write-Host "Processing $_..."
 	Invoke-Command -ComputerName $_ -ScriptBlock {
-		$AppName = "ANSYS 2022 R2 Academic Mechanical"
+		$AppName = "Full localized app name"
 		$Method = "Install" # Or "Uninstall"
 
 		$app = (Get-CimInstance -ClassName CCM_Application -Namespace "root\ccm\clientSDK" | Where-Object {$_.Name -like $AppName})
