@@ -901,7 +901,7 @@ function Get-CMDeviceDeployments {
 # List all deployments for a single device:
 Get-CMDeviceDeployments "mel-1001-01"
 
-# Use the function to compare deployments between two devices:
+# Compare deployments between two devices:
 $left = Get-CMDeviceDeployments "mel-1001-01"
 $right = Get-CMDeviceDeployments "eh-406b1-01"
 Compare-Object -ReferenceObject $left -DifferenceObject $right -IncludeEqual
