@@ -846,3 +846,59 @@ Invoke-CMDeviceCollectionUpdate -Name "UIUC-ENGR-IS OSD TS (2022c NoApps, Availa
 
 # -----------------------------------------------------------------------------
 
+# Get list of deployments for a given computer
+# Requires PowerShell 5.1
+# Based on code from here:
+# https://www.verboon.info/2014/10/use-powershell-to-find-all-collections-where-the-specified-device-has-a-membership/
+function Get-CMDeviceDeployments {
+	param(
+		[Parameter(Mandatory=$true, Position=0)]
+		[String]$Computer
+	)
+
+	function log($msg) {
+		Write-Host $msg
+	}
+
+	Prep-MECM
+
+	log "Getting computer..."
+	$comp = Get-CMDevice -Resource -Fast -Name $Computer
+
+	if($comp) {
+		log "Getting collections containing computer..."
+		# If I can find a way to do this with ConfigurationManager PowerShell module cmdlets, then this script could support PowerShell 7
+		$siteCode = "MP0"
+		$siteServer = "sccmcas.ad.uillinois.edu"
+		$collIds = Get-WmiObject -ComputerName $siteServer -Class "sms_fullcollectionmembership" -Namespace "root\SMS\site_$SiteCode" -Filter "ResourceID = '$($comp.ResourceId)'" | Select -ExpandProperty "CollectionID"
+		
+		log "Getting info for each collection..."
+		$collIds | ForEach-Object {
+			log "    Getting info for collection `"$_`"..."
+			$collInfo = Get-CMCollection -Id $_
+			$collName = $collInfo.Name
+			log "        Name: `"$collName`""
+			
+			log "        Getting deployments..."
+			$deps = Get-CMDeployment -CollectionName $collName
+			
+			log "        Getting info for each deployment..."
+			$deps | ForEach-Object {
+				log "            Getting info for deployment `"$($_.DeploymentID)`"..."
+				$app = $_.ApplicationName
+				$coll = $_.CollectionName
+				log "                Application: `"$app`""
+				log "                Collection: `"$coll`""
+				[PSCustomObject]@{
+					Application = $app
+					Collection = $coll
+				}
+			}
+		} | Sort Application,Collection
+	}
+}
+
+Get-CMDeviceDeployments "mel-1001-01"
+
+# -----------------------------------------------------------------------------
+
