@@ -72,11 +72,55 @@ Invoke-CimMethod -ComputerName "comp-name-01" -Namespace "root\ccm" -ClassName "
 # -----------------------------------------------------------------------------
 
 # Find the difference between two MECM collections:
-$one = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 1" | Select Name).Name
-$two = (Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection 2" | Select Name).Name
-$diff = Compare-Object -ReferenceObject $one -DifferenceObject $two
-$diff
-@($diff).count
+function Compare-CMCollections {
+	param(
+		[Parameter(Mandatory=$true, Position=0)]
+		[string]$LeftCollection,
+		
+		[Parameter(Mandatory=$true, Position=1)]
+		[string]$RightCollection
+	)
+	
+	function log($msg) { Write-Host $msg }
+	function Log-Object($object) {
+		$string = $object | Out-String
+		$string = $string.Trim()
+		$lines = $string.Split("`n")
+		$lines | ForEach-Object {
+			$line = "    $_"
+			Write-Host $line
+		}
+	}
+	
+	$myPwd = pwd
+	Prep-MECM
+	$leftMembers = Get-CMCollectionMember -CollectionName $LeftCollection | Select -ExpandProperty "Name"
+	$rightMembers = Get-CMCollectionMember -CollectionName $RightCollection | Select -ExpandProperty "Name"
+	Set-Location $myPwd
+	
+	$full = Compare-Object -ReferenceObject $leftMembers -DifferenceObject $rightMembers -IncludeEqual
+	$diffs = Compare-Object -ReferenceObject $leftMembers -DifferenceObject $rightMembers
+	$diffsCount = 0
+	if($diffs) { $diffsCount = @($diffs).count }
+	
+	log "Left collection: `"$LeftCollection`""
+	log "Right collection: `"$RightCollection`""
+	log ""
+	log "Full comparison:"
+	log "--------------------------------"
+	Log-Object $full
+	log "--------------------------------"
+	log ""
+	log "Diffs only:"
+	log "--------------------------------"
+	Log-Object $diffs
+	log "--------------------------------"
+	log ""
+	log "Diffs: $diffsCount"
+}
+
+# Example:
+Compare-CMCollections "UIUC-ENGR-IS Make Other or Unknown" "UIUC-ENGR-IS Model Other or Unknown"
 
 # -----------------------------------------------------------------------------
 
