@@ -147,7 +147,7 @@ Get-CMDeviceCollection -Name $coll | Set-CMDeviceCollection -NewName $newname
 
 # Get all MECM Collections named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
 
-$colls = Get-CMCollection | Where { $_.Name -like "UIUC-ENGR *" }
+$colls = Get-CMCollection -Name "UIUC-ENGR *"
 $colls | ForEach-Object {
 	$name = $_.Name
 	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
@@ -158,7 +158,7 @@ $colls | ForEach-Object {
 # -----------------------------------------------------------------------------
 
 # Get all MECM Applications named like "UIUC-ENGR *" and rename them to "UIUC-ENGR-*"
-$apps = Get-CMApplication -Fast | Where { $_.LocalizedDisplayName -like "UIUC-ENGR *" }
+$apps = Get-CMApplication -Fast -LocalizedDisplayName "UIUC-ENGR *"
 $apps | ForEach-Object {
 	$name = $_.LocalizedDisplayName
 	$newname = $name -replace "UIUC-ENGR ","UIUC-ENGR-"
