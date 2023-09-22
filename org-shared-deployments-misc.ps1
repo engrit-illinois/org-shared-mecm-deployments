@@ -44,8 +44,30 @@ Set-Location $myPWD
 # -----------------------------------------------------------------------------
 
 # Find which MECM collections contain a given machine:
+
 # Note: this will probably take a long time (15+ minutes) to run
-Get-CMCollection | Where { (Get-CMCollectionMember -InputObject $_).Name -contains "machine-name" } | Select Name
+$compName = "machine-name"
+Get-CMCollection | Where { (Get-CMCollectionMember -InputObject $_).Name -contains $compName } | Select -ExpandProperty Name
+
+# Alternate that's much faster, but requires PowerShell 5.1:
+function Get-CMCollsOfMachine($compName) {
+	$comp = Get-CMDevice -Resource -Fast -Name $compName
+	if($comp) {
+		$siteCode = "MP0"
+		$siteServer = "sccmcas.ad.uillinois.edu"
+		$collIds = Get-WmiObject -ComputerName $siteServer -Class "sms_fullcollectionmembership" -Namespace "root\SMS\site_$SiteCode" -Filter "ResourceID = '$($comp.ResourceId)'" | Select -ExpandProperty "CollectionID"
+	 	$colls = $collIds | ForEach-Object {
+	  		Get-CMCollection -Id $_
+	  	}
+	}
+	$colls | Select -ExpandProperty Name
+}
+ Get-CMCollsOfMachine "machine-name"
+
+# Compare collections of two machines:
+$left = Get-CMCollsOfMachine "mel-1001-01"
+$right = Get-CMCollsOfMachine "eh-406b1-01"
+Compare-Object -ReferenceObject $left -DifferenceObject $right -IncludeEqual
 
 # -----------------------------------------------------------------------------
 
