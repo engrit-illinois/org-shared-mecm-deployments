@@ -974,3 +974,59 @@ Compare-Object -ReferenceObject $left -DifferenceObject $right -Property Applica
 
 # -----------------------------------------------------------------------------
 
+# List all "UIUC-ENGR-*" apps which have deployment types that have requirements
+# This will take several minutes to run
+
+function log($msg, $l=0) {
+	for($i = 0; $i -lt $l; $i += 1) {
+		$msg = "    $msg"
+	}
+	Write-Host $msg
+}
+
+log "Getting apps..."
+$apps = Get-CMApplication -Fast -ApplicationName "UIUC-ENGR-*" | Sort LocalizedDisplayName
+log "Done getting apps."
+
+log "Parsing apps..."
+$results = $apps | ForEach-Object {
+	$app = $_
+	log "Parsing app: `"$($app.LocalizedDisplayName)`"..." -l 1
+	
+	log "Getting app DTs..." -l 2
+	$appDts = $null
+	$appDts = $app | Get-CMDeploymentType
+	
+	log "Parsing app DTs..." -l 3
+	$appDts | ForEach-Object {
+		$dt = $_
+		log "Parsing app DT: `"$($dt.LocalizedDisplayName)`"..." -l 4
+		
+		log "Getting app DT reqs..." -l 5
+		$reqs = $null
+		$reqs = $dt | Get-CMDeploymentTypeRequirement
+		
+		if(-not $reqs) {
+			log "No app DT reqs." -l 6
+		}
+		else {
+			log "Parsing app DT reqs...." -l 6
+			$reqs | ForEach-Object {
+				$req = $_
+				log "Parsing app DT req: `"$($req.Name)`"..." -l 7
+				
+				[PSCustomObject]@{
+					App = $app.LocalizedDisplayName
+					DT = $dt.LocalizedDisplayName
+					Req = $req.Name
+				}
+			}
+		}
+	}
+}
+log "Done parsing apps."
+
+$results | Select App,DT,Req | Sort App | Format-Table
+
+# -----------------------------------------------------------------------------
+
