@@ -27,7 +27,7 @@ https://github.com/engrit-illinois/New-CMOrgModelDeploymentCollection
 Triggers an MECM Task Sequence on one or more remote computers by communicating directly with their MECM client.
 https://github.com/engrit-illinois/Invoke-TaskSequence
 
-### Get-CollsWhichIncludeColl
+### Get-CMCollsWhichIncludeColl
 A module to return the list of collections in which a given collection is included  
 https://github.com/engrit-illinois/Get-CMCollsWhichIncludeColl  
 
