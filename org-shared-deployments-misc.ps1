@@ -1040,12 +1040,12 @@ GpUpdate-Computer eceb-3014-*
 
 # 3. Restart MECM agent on endpoints
 $comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
-$comps | ForEach-Object { Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
+$comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
 # 4. Run Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT
 # In theory, this can be done via PowerShell as well, through I've not had much luck with it in the past:
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
-$comps | ForEach-Object { Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
+$comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 
 # 5. Run the following to make sure all systems are known by MECM to be in their new OU (based on the MECM object's SystemOUName property:
 $test = Get-CMResource -ResourceType System -Fast
