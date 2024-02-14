@@ -1049,7 +1049,7 @@ $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -C
 
 # 5. Run the following to make sure all systems are known by MECM to be in their new OU (based on the MECM object's SystemOUName property:
 $test = Get-CMResource -ResourceType System -Fast
-$test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$string=$_.SystemOUName -join "";$string -replace "^.*/",""}}
+$test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
 # 6. If not, wait a few minutes and try again (or try steps 2-4 again), until step 5 shows all systems are recognized as being in the new OU.
 
