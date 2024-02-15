@@ -1042,17 +1042,18 @@ GpUpdate-Computer eceb-3014-*
 $comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
-# 4. Usually restarting the MECM service is enough to cause the MECM clients to update MECM with the new SystemOU.
-# You can check by running the following:
+# 4. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
 $test = Get-CMResource -ResourceType System -Fast
 $test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
-# 5. If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT.
+# Usually restarting the MECM service is enough to cause the MECM clients to update their MECM objects.
+# If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT.
 # In theory, this can be done via PowerShell as well, through I've not had much luck with it in the past:
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
+# If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
 
-# 6. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then update the collection membership:
+# 5. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then update the collection membership:
 Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
 
 # -----------------------------------------------------------------------------
