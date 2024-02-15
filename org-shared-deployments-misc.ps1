@@ -1042,18 +1042,17 @@ GpUpdate-Computer eceb-3014-*
 $comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
-# 4. Run Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT
+# 4. Usually restarting the MECM service is enough to cause the MECM clients to update MECM with the new SystemOU.
+# You can check by running the following:
+$test = Get-CMResource -ResourceType System -Fast
+$test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
+
+# 5. If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT.
 # In theory, this can be done via PowerShell as well, through I've not had much luck with it in the past:
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 
-# 5. Run the following to make sure all systems are known by MECM to be in their new OU (based on the MECM object's SystemOUName property:
-$test = Get-CMResource -ResourceType System -Fast
-$test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
-
-# 6. If not, wait a few minutes and try again (or try steps 2-4 again), until step 5 shows all systems are recognized as being in the new OU.
-
-# 7. Update the collection membership:
+# 6. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then update the collection membership:
 Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
 
 # -----------------------------------------------------------------------------
