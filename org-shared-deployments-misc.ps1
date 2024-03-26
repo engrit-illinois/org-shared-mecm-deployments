@@ -1047,8 +1047,8 @@ $test = Get-CMResource -ResourceType System -Fast
 $test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
 # Usually restarting the MECM service is enough to cause the MECM clients to update their MECM objects.
-# If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients, using RCT.
-# In theory, this can be done via PowerShell as well, through I've not had much luck with it in the past:
+# If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients.
+# I recommend using RCT to do this. In theory, this can be done via PowerShell as well, but I've not had much luck with it in the past:
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 # If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
