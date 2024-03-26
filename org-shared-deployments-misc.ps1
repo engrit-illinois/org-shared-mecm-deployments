@@ -1039,7 +1039,7 @@ Rename-ADObject -Identity "OU=ECEB 3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=
 GpUpdate-Computer eceb-3014-*
 
 # 3. Restart MECM agent on endpoints
-$comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
+$comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECE,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
 # 4. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
