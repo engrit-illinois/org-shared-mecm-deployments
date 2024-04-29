@@ -1058,3 +1058,15 @@ Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
 
 # -----------------------------------------------------------------------------
 
+# Quickly open the latest smsts.log file using CMTrace
+"c:\windows\ccm\cmtrace.exe" "c:\windows\ccm\logs\smsts.log"
+
+# -----------------------------------------------------------------------------
+
+# Disable and stop the Ccmexec service (the MECM client's main service).
+# Useful for reimporting a computer's object without the need to shut it down to prevent automatic object re-creation (which can cause objects to get stuck at the MECM root)
+Set-Service -Name "Ccmexec" -StartupType "Disabled"
+Get-Service -Name "Ccmexec" | Stop-Service
+
+# -----------------------------------------------------------------------------
+
