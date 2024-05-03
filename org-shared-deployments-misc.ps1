@@ -1070,3 +1070,61 @@ Get-Service -Name "Ccmexec" | Stop-Service
 
 # -----------------------------------------------------------------------------
 
+# Find all Task Sequences which reference a given application
+
+$targetApp = "*vmware*"
+
+function log($msg) {
+	$ts = Get-Date -Format "HH:mm:ss"
+	Write-Host "[$($ts)] $msg"
+}
+
+log "Getting TSes..."
+$tses = Get-CMTaskSequence -Name "UIUC-ENGR-*"
+$tsesCount = $tses.count
+log "    Found `"$tsesCount`" matching TSes."
+
+log "Looping through TSes..."
+$matches = $tses | ForEach-Object {
+	$ts = $_
+	$tsName = $ts.Name
+	log "    TS: `"$tsName`""
+	
+	log "        Getting TS references..."
+	$tsRefs = $_ | Select -ExpandProperty "References"
+	$tsRefsCount = $tsRefs.count
+	log "            Found `"$tsRefsCount`" references."
+	
+	log "        Looping through references..."
+	$tsRefs | ForEach-Object {
+		$package = $_.Package
+		log "            Reference ID: `"$package`""
+		
+		if($package -notlike "ScopeId_*/Application_*") {
+			log "                Reference doesn't look like an application. Ignoring."
+		}
+		else {
+			log "                Reference looks like an application."
+			log "                Getting name of application..."
+			$app = $null
+			$app = Get-CMApplication -Fast -ModelName $package
+			$appName = "unknown"
+			if($app) { $appName = $app.LocalizedDisplayName }
+			log "                App: `"$appName`""
+			
+			if($appName -ne "unknown") {
+				if($appName -like $targetApp) {
+					[PSCustomObject]@{
+						TS = $tsName
+						App = $appName
+					}
+				}
+			}
+		}
+	}
+}
+
+$matches | Sort "App","TS"
+
+# -----------------------------------------------------------------------------
+
