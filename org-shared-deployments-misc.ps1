@@ -199,6 +199,9 @@ $tses | ForEach-Object {
     Set-CMTaskSequence -Name $name -NewName $newname
 }
 
+# One-liner version
+Get-CMTaskSequence -Fast -Name "UIUC-CBTF Windows 10 ENGR BETA*" | ForEach-Object { $name = $_.Name; $newName = $name.Replace("v15","v16"); Write-Host "Renaming `"$name`" to `"$newName`"..."; Set-CMTaskSequence -InputObject $_ -NewName $newName }
+
 # -----------------------------------------------------------------------------
 
 # Get all relevant collections so they can be used in a foreach loop with the below commands
