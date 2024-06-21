@@ -909,9 +909,12 @@ Select-String -Path "\\engrit-mms-tvm0\c$\windows\ccm\logs\*.*" -Pattern "TraceP
 # -----------------------------------------------------------------------------
 
 # Update all the relevant collections to speed up new IS imports
+# For searchability: Invoke-CMCollectionUpdate
 Invoke-CMDeviceCollectionUpdate -Name "UIUC-ENGR-Devices without MECM client"
 Invoke-CMDeviceCollectionUpdate -Name "UIUC-ENGR-Instructional plus devices without MECM client"
 Invoke-CMDeviceCollectionUpdate -Name "UIUC-ENGR-IS OSD TS (Win11 2023c, Available, no SC)"
+
+# James made a slightly nicer function for this here: https://gist.github.com/han44-illinois/f1776a7513082c1cc278518f9897b9f5
 
 # -----------------------------------------------------------------------------
 
