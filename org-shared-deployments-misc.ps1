@@ -1074,6 +1074,18 @@ Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
 Set-Service -Name "Ccmexec" -StartupType "Disabled"
 Get-Service -Name "Ccmexec" | Stop-Service
 
+# Here's some code to do this across many machines and report the results:
+$comps | ForEach-Object {
+	$name = $_.Name
+	Write-Host "Processing `"$name`"..."
+	Invoke-Command -ComputerName $name -ScriptBlock {
+		Set-Service -Name "Ccmexec" -StartupType "Disabled"
+		Get-Service -Name "Ccmexec" | Stop-Service
+		Get-Service -Name CcmExec | Select PSComputerName,Name,DisplayName,Status,StartType
+	}
+	Write-Host "Done processing `"$name`"..."
+} | Format-Table
+
 # -----------------------------------------------------------------------------
 
 # Find all Task Sequences which reference a given application
