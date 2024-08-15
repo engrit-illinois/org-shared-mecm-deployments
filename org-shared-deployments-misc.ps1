@@ -843,6 +843,7 @@ $comps.Name | ForEach-Object -ThrottleLimit 15 -Parallel {
 # -----------------------------------------------------------------------------
 
 # Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
+# When Software Center "successfully" runs an install, but does not detect it afterward, it will report error 0x87d00324.
 
 # For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
 # This causes Powershell to wait for them to finish, in order to "capture" all the output.
