@@ -1065,13 +1065,14 @@ Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
 
 # -----------------------------------------------------------------------------
 
-# Quickly open the latest smsts.log file using CMTrace
-"c:\windows\ccm\cmtrace.exe" "c:\windows\ccm\logs\smsts.log"
+# Disable and stop the Ccmexec service (the MECM client's main service).
+# Useful when replacing machines, so you can delete the old machine's MECM object without taking the machine offline, and that MECM object won't get re-created.
+# See: https://github.com/engrit-illinois/Set-CcmexecService
 
 # -----------------------------------------------------------------------------
 
-# Disable and stop the Ccmexec service (the MECM client's main service).
-# See: https://github.com/engrit-illinois/Set-CcmexecService
+# Quickly open the latest smsts.log file using CMTrace
+"c:\windows\ccm\cmtrace.exe" "c:\windows\ccm\logs\smsts.log"
 
 # -----------------------------------------------------------------------------
 
