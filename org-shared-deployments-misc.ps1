@@ -1039,19 +1039,23 @@ $results | Select App,DT,Req | Sort App | Format-Table
 
 # Procedure for updating MECM AD query-based collections when an OU changes:
 
-# 1. Rename the AD OU, e.g.:
-Rename-ADObject -Identity "OU=ECEB 3014,OU=ECEB,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" -NewName "ECEB-3014"
+# 1. Define OU and computer names:
+$oldOuDn = "OU=EH-101,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
+$comps = Get-ADComputer -Filter "name -like 'eh-101-*'" -SearchBase $ou | Select -ExpandProperty "Name"
+
+# 2. Rename the AD OU, e.g.:
+Rename-ADObject -Identity $oldOuDn -NewName "EH-202"
 
 # 2. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
-GpUpdate-Computer eceb-3014-*
+# See: https://github.com/engrit-illinois/GpUpdate-Computer
+GpUpdate-Computer $comps
 
 # 3. Restart MECM agent on endpoints
-$comps = Get-ADComputer -Filter "name -like 'eceb-3014-*'" -SearchBase "OU=ECEB-3014,OU=ECE,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu" | Select -ExpandProperty "Name"
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
 # 4. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
 $test = Get-CMResource -ResourceType System -Fast
-$test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
+$test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
 # Usually restarting the MECM service is enough to cause the MECM clients to update their MECM objects.
 # If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients.
@@ -1060,8 +1064,10 @@ $test | Where { $_.Name -like "eceb-3014-*" } | Sort Name | Select Name,@{N="OU"
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 # If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
 
-# 5. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then update the collection membership:
-Invoke-CMCollectionUpdate -Name "UIUC-ENGR-IS ECE ECEB-3014"
+# 5. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then rename and update the collection membership:
+$coll = Get-CMCollection -Name "UIUC-ENGR-IS EWS EH-101"
+$coll | Set-CMCollection -NewName "UIUC-ENGR-IS EWS EH-202"
+$coll | Invoke-CMCollectionUpdate
 
 # -----------------------------------------------------------------------------
 
