@@ -1041,7 +1041,7 @@ $results | Select App,DT,Req | Sort App | Format-Table
 
 # 1. Define OU and computer names:
 $oldOuDn = "OU=EH-101,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
-$comps = Get-ADComputer -Filter "name -like 'eh-101-*'" -SearchBase $ou | Select -ExpandProperty "Name"
+$comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
 
 # 2. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName "EH-202"
