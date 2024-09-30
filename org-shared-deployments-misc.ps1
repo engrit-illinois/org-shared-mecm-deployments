@@ -1040,7 +1040,9 @@ $results | Select App,DT,Req | Sort App | Format-Table
 # Procedure for updating MECM AD query-based collections when an OU changes:
 
 # 1. Define OU:
-$oldOuDn = "OU=EH-101,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
+$oldOuName = "EH-101"
+$oldOuParentDn = "OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
+$oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 
 # 2. Define computers names:
 $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
@@ -1049,7 +1051,8 @@ $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandPropert
 $comps
 
 # 4. Rename the AD OU, e.g.:
-Rename-ADObject -Identity $oldOuDn -NewName "EH-202"
+$newOuName = "EH-202"
+Rename-ADObject -Identity $oldOuDn -NewName $newOuName
 
 # 5. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
 # See: https://github.com/engrit-illinois/GpUpdate-Computer
@@ -1069,9 +1072,34 @@ $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 # If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
 
-# 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then rename and update the collection membership:
-$coll = Get-CMCollection -Name "UIUC-ENGR-IS EWS EH-101"
-$coll | Set-CMCollection -NewName "UIUC-ENGR-IS EWS EH-202"
+# 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
+
+# Define the MECM collection:
+$collName = "UIUC-ENGR-IS EWS EH-101"
+
+# Get the collection
+$coll = Get-CMCollection -Name $collName
+
+# Get the collection's query rules:
+$rule = $coll | Get-CMDeviceCollectionQueryMembershipRule
+
+# Verify that there's only one rule and it is as expected:
+# If there's more than one rule, you'll have to adjust accordingly.
+$rule
+Read-Host
+
+# Remove existing rule:
+$coll | Remove-CMDeviceCollectionQueryMembershipRule -RuleName $rule.RuleName -Force
+
+# Add a modified rule:
+$newQuery = ($rule.QueryExpression).Replace($oldOuName,$newOuName)
+$coll | Add-CMDeviceCollectionQueryMembershipRule -RuleName "$newOuName OU" -QueryExpression $newQuery
+
+# 9. Rename the collection:
+$newCollName = $collName.Replace($oldOuName,$newOuName)
+$coll | Set-CMCollection -NewName $newCollName
+
+# 10. Update the collection's membership
 $coll | Invoke-CMCollectionUpdate
 
 # -----------------------------------------------------------------------------
