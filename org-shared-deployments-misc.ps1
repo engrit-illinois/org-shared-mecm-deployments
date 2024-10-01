@@ -1046,7 +1046,7 @@ $newOuName = "EH-202"
 $oldCollName = "UIUC-ENGR-IS EWS EH-101"
 
 $oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
-$comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
+$comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name" | Sort
 
 # 2. Verify computers are as expected:
 $comps
