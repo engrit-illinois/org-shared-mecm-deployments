@@ -1067,6 +1067,8 @@ GpUpdate-Computer $comps
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
 # 7. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
+# See: https://github.com/engrit-illinois/Prep-MECM
+Prep-MECM
 $test = Get-CMResource -ResourceType System -Fast
 $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
