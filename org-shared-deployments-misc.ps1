@@ -1042,10 +1042,11 @@ $results | Select App,DT,Req | Sort App | Format-Table
 # 1. Define the objects in question
 $oldOuName = "EH-101"
 $oldOuParentDn = "OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
-$oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 $newOuName = "EH-202"
-$comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
 $oldCollName = "UIUC-ENGR-IS EWS EH-101"
+
+$oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
+$comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
 
 # 2. Verify computers are as expected:
 $comps
