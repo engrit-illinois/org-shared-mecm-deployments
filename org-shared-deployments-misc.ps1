@@ -1052,9 +1052,11 @@ $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandPropert
 $comps
 Read-Host
 
-# 3. Ideally, very computers are online:
+# 3. Ideally, very computers are online and healthy:
 # See: https://github.com/engrit-illinois/Ping-All
 Ping-All $comps
+# See: https://github.com/engrit-illinois/Get-MachineInfo
+Get-MachineInfo $comps
 
 # 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
