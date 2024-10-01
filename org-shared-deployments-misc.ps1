@@ -1042,6 +1042,7 @@ $results | Select App,DT,Req | Sort App | Format-Table
 # 1. Define the objects in question
 $oldOuName = "EH-101"
 $oldOuParentDn = "OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"
+$oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 $newOuName = "EH-202"
 $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name"
 $oldCollName = "UIUC-ENGR-IS EWS EH-101"
@@ -1051,7 +1052,6 @@ $comps
 Read-Host
 
 # 3. Rename the AD OU, e.g.:
-$oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
 
 # 4. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
