@@ -1052,17 +1052,21 @@ $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandPropert
 $comps
 Read-Host
 
-# 3. Rename the AD OU, e.g.:
+# 3. Ideally, very computers are online:
+# See: https://github.com/engrit-illinois/Ping-All
+Ping-All $comps
+
+# 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
 
-# 4. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
+# 5. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
 # See: https://github.com/engrit-illinois/GpUpdate-Computer
 GpUpdate-Computer $comps
 
-# 5. Restart MECM agent on endpoints
+# 6. Restart MECM agent on endpoints
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
-# 6. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
+# 7. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
 $test = Get-CMResource -ResourceType System -Fast
 $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
@@ -1073,7 +1077,7 @@ $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last
 $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
 # If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
 
-# 7. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
+# 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
 # Get the collection
 $coll = Get-CMCollection -Name $collName
 # Get the collection's query rules:
@@ -1088,11 +1092,11 @@ $coll | Remove-CMDeviceCollectionQueryMembershipRule -RuleName $rule.RuleName -F
 $newQuery = ($rule.QueryExpression).Replace($oldOuName,$newOuName)
 $coll | Add-CMDeviceCollectionQueryMembershipRule -RuleName "$newOuName OU" -QueryExpression $newQuery
 
-# 8. Rename the collection:
+# 9. Rename the collection:
 $newCollName = $collName.Replace($oldOuName,$newOuName)
 $coll | Set-CMCollection -NewName $newCollName
 
-# 9. Update the collection's membership
+# 10. Update the collection's membership
 $coll | Invoke-CMCollectionUpdate
 
 # -----------------------------------------------------------------------------
