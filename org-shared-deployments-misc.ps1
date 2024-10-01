@@ -1049,8 +1049,8 @@ $oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name" | Sort
 
 # 2. Verify computers are as expected:
-$comps
-Read-Host
+$comps | Out-Host
+Read-Host "Verify that the above list of computers is as expected"
 
 # 3. Ideally, very computers are online and healthy:
 # See: https://github.com/engrit-illinois/Ping-All
@@ -1076,10 +1076,17 @@ $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last
 
 # Usually restarting the MECM service is enough to cause the MECM clients to update their MECM objects.
 # If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients.
-# I recommend using RCT to do this. In theory, this can be done via PowerShell as well, but I've not had much luck with it in the past:
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
-$comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" }
-# If you're still having trouble getting the MECM objects updated with the new SystemOU, try rebooting the systems.
+# https://learn.microsoft.com/en-us/mem/configmgr/develop/reference/core/clients/client-classes/triggerschedule-method-in-class-sms_client
+# https://learn.microsoft.com/en-us/powershell/module/cimcmdlets/invoke-cimmethod?view=powershell-7.4#parameters
+# For some reason the "103" schedule ID is technically what is officially documented as being "Discovery Data Collection Cycle", while the "003" schedule ID is documented as simply "Discovery Data Record".
+# However many unofficial sites document the "003" schedule ID as being the equivalent of "Discovery Data Collection Cycle".
+# Old WMI version:
+#$comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { Invoke-WmiMethod -Namespace root\ccm -Class sms_client -Name TriggerSchedule "{00000000-0000-0000-0000-000000000003}" } }
+# New CIM version:
+$comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { Invoke-CimMethod -Namespace 'root\ccm' -ClassName sms_client -MethodName TriggerSchedule -Arguments @{sScheduleID='{00000000-0000-0000-0000-000000000003}'} } }
+# You can also use the MECM console (or even better RCT) to do this.
+# If you're still having trouble getting the MECM objects updated with the new SystemOU value, try rebooting the systems.
 
 # 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
 # Get the collection
@@ -1088,8 +1095,8 @@ $coll = Get-CMCollection -Name $oldCollName
 $rule = $coll | Get-CMDeviceCollectionQueryMembershipRule
 # Verify that there's only one rule and it is as expected:
 # If there's more than one rule, you'll have to adjust accordingly.
-$rule
-Read-Host
+$rule | Out-Host
+Read-Host "Verify that there's only one rule listed above and that it looks as expected"
 # Remove existing rule:
 $coll | Remove-CMDeviceCollectionQueryMembershipRule -RuleName $rule.RuleName -Force
 # Add a modified rule:
