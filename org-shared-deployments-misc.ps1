@@ -1081,7 +1081,7 @@ $comps | ForEach-Object { Write-Host $_; Invoke-WmiMethod -Namespace root\ccm -C
 
 # 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
 # Get the collection
-$coll = Get-CMCollection -Name $collName
+$coll = Get-CMCollection -Name $oldCollName
 # Get the collection's query rules:
 $rule = $coll | Get-CMDeviceCollectionQueryMembershipRule
 # Verify that there's only one rule and it is as expected:
