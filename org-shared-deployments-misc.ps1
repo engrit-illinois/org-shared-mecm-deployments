@@ -1052,13 +1052,15 @@ $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandPropert
 $comps | Out-Host
 Read-Host "Verify that the above list of computers is as expected"
 
-# 3. Ideally, very computers are online and healthy:
+# 3. Verify that the relevant computers are online and healthy.
+# Ideally all computers which are currently members of the MECM collection should be online, so that after everything is changed and the collection is updated, its membership won't have changed,
+# and we won't have to wait for any computers to come back online later in order to be populated into the collection.
 # See: https://github.com/engrit-illinois/Ping-All
 Ping-All $comps
 # See: https://github.com/engrit-illinois/Get-MachineInfo
 Get-MachineInfo $comps
-# Compare the response against the computers that exist in the MECM collection. Some AD objects may be stale.
-# If so, remove those from the array of computer names:
+# Compare the response against the computers that exist in the MECM collection.
+# Some AD objects may be stale. If there's any AD objects which are not already members of the MECm collection, you can just remove those from the array of computer names:
 # $comps = $comps | Where { $_ -notlike "stale-comp-01" }
 
 # 4. Rename the AD OU, e.g.:
