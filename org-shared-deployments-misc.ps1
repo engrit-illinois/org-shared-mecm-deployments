@@ -1057,6 +1057,9 @@ Read-Host "Verify that the above list of computers is as expected"
 Ping-All $comps
 # See: https://github.com/engrit-illinois/Get-MachineInfo
 Get-MachineInfo $comps
+# Compare the response against the computers that exist in the MECM collection. Some AD objects may be stale.
+# If so, remove those from the array of computer names:
+# $comps = $comps | Where { $_ -notlike "stale-comp-01" }
 
 # 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
