@@ -1054,7 +1054,8 @@ $comps | Out-Host
 # See: https://github.com/engrit-illinois/Prep-MECM
 Prep-MECM
 Write-Host "MECM device objects in collection `"$oldCollName`":"
-Get-CMCollectionMember -CollectionName $oldCollName
+$mecmComps = Get-CMCollectionMember -CollectionName $oldCollName | Select -ExpandProperty "Name" | Sort
+$mecmComps | Out-Host
 Read-Host "Verify that the above list of computers is as expected"
 # All MECM objects should have corresponding AD objects.
 # However some AD objects may be stale and may not have corresponding MECM objects.
@@ -1073,6 +1074,8 @@ Get-MachineInfo $comps
 
 # 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
+# Make sure to wait several seconds for the change to replicated across domain controllers before gpupdating computers:
+Start-Sleep -Seconds 15
 
 # 5. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
 # See: https://github.com/engrit-illinois/GpUpdate-Computer
