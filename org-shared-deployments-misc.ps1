@@ -1100,7 +1100,7 @@ $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last
 # New CIM version:
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { Invoke-CimMethod -Namespace 'root\ccm' -ClassName sms_client -MethodName TriggerSchedule -Arguments @{sScheduleID='{00000000-0000-0000-0000-000000000003}'} } }
 # You can also use the MECM console (or even better RCT) to do this.
-# If you're still having trouble getting the MECM objects updated with the new SystemOU value, try rebooting the systems.
+# If you're still having trouble getting the MECM objects updated with the new SystemOU value, rebooting the offending machine will usually fix it.
 
 # 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
 # Get the collection
@@ -1123,6 +1123,18 @@ $coll | Set-CMCollection -NewName $newCollName
 
 # 10. Update the collection's membership
 $coll | Invoke-CMCollectionUpdate
+
+# 11. Wait for the collection to finish updating and verify that the collection membership is still the same after re-evaluating with the new rule:
+# This is important as computers dropping out of collections could remove them from important deployments until they process their way back into the correct collections.
+# This is especially important if any collections have application deployments with Implicit Uninstall enabled.
+# This order of this whole procedure was designed specifically to avoid interruptions in collection membership for these reasons.
+$newRule = $coll | Get-CMDeviceCollectionQueryMembershipRule
+$newRule | Out-Host
+Write-Host "Previous collection membership:"
+$mecmComps | Out-Host
+Write-Host "Current collection membership:"
+$newMecmComps = Get-CMCollectionMember -CollectionName $oldCollName | Select -ExpandProperty "Name" | Sort
+$newMecmComps | Out-Host
 
 # -----------------------------------------------------------------------------
 
