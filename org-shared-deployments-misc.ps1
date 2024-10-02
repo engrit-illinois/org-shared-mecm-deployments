@@ -1048,9 +1048,20 @@ $oldCollName = "UIUC-ENGR-IS EWS EH-101"
 $oldOuDn = "OU=$($oldOuName),$($oldOuParentDn)"
 $comps = Get-ADComputer -Filter "*" -SearchBase $oldOuDn | Select -ExpandProperty "Name" | Sort
 
-# 2. Verify computers are as expected:
+# 2. Verify computers in AD and MECM are as expected:
+Write-Host "AD computer objects in OU `"$oldOuDn`":"
 $comps | Out-Host
+# See: https://github.com/engrit-illinois/Prep-MECM
+Prep-MECM
+Write-Host "MECM device objects in collection `"$oldCollName`":"
+Get-CMCollectionMember -CollectionName $oldCollName
 Read-Host "Verify that the above list of computers is as expected"
+# All MECM objects should have corresponding AD objects.
+# However some AD objects may be stale and may not have corresponding MECM objects.
+# If so, you can just remove those from the array of computer names:
+# $comps = $comps | Where { $_ -notlike "stale-comp-01" }
+# Eventually AD objects should removed or addressed/troubleshot as to why they haven't been online long enough to have an MECM object,
+# but this won't cause a problem for the rest of this procedure, since they don't currently in MECM currently anyway.
 
 # 3. Verify that the relevant computers are online and healthy.
 # Ideally all computers which are currently members of the MECM collection should be online, so that after everything is changed and the collection is updated, its membership won't have changed,
@@ -1059,9 +1070,6 @@ Read-Host "Verify that the above list of computers is as expected"
 Ping-All $comps
 # See: https://github.com/engrit-illinois/Get-MachineInfo
 Get-MachineInfo $comps
-# Compare the response against the computers that exist in the MECM collection.
-# Some AD objects may be stale. If there's any AD objects which are not already members of the MECm collection, you can just remove those from the array of computer names:
-# $comps = $comps | Where { $_ -notlike "stale-comp-01" }
 
 # 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
@@ -1074,8 +1082,6 @@ GpUpdate-Computer $comps
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 
 # 7. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
-# See: https://github.com/engrit-illinois/Prep-MECM
-Prep-MECM
 $test = Get-CMResource -ResourceType System -Fast
 $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
 
