@@ -1109,7 +1109,7 @@ $newQuery = ($rule.QueryExpression).Replace($oldOuName,$newOuName)
 $coll | Add-CMDeviceCollectionQueryMembershipRule -RuleName "$newOuName OU" -QueryExpression $newQuery
 
 # 9. Rename the collection:
-$newCollName = $collName.Replace($oldOuName,$newOuName)
+$newCollName = $oldCollName.Replace($oldOuName,$newOuName)
 $coll | Set-CMCollection -NewName $newCollName
 
 # 10. Update the collection's membership
