@@ -205,7 +205,9 @@ Get-CMTaskSequence -Fast -Name "UIUC-CBTF Windows 10 ENGR BETA*" | ForEach-Objec
 # -----------------------------------------------------------------------------
 
 # Get all relevant collections so they can be used in a foreach loop with the below commands
-# Be very careful to check that you're actually getting ONLY the collections you want with this, before relying on the list of returned collections to make changes. It would have made it easier to rely on this if I had designed these collections to have a standard prefix, but I wanted to keep the UIUC-ENGR-App Name format to make it crystal clear that these are to be used as the primary org collections/deployments for these apps. Unfortunately the ConfigurationManager powershell module doesn't have any support for working with folders (known as container nodes).
+# Be very careful to check that you're actually getting ONLY the collections you want with this, before relying on the list of returned collections to make changes.
+# It would have made it easier to rely on this if I had designed these collections to have a standard prefix, but I wanted to keep the UIUC-ENGR-App Name format to make it crystal clear that these are to be used as the primary org collections/deployments for these apps.
+# Unfortunately the ConfigurationManager powershell module doesn't have any support for working with folders (known as container nodes).
 $collsAvailable = (Get-CMCollection -Name "Deploy * - Latest (Available)" | Select Name).Name
 $collsRequired = (Get-CMCollection -Name "Deploy * - Latest (Required)" | Select Name).Name
 
