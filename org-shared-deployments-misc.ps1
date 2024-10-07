@@ -1077,7 +1077,7 @@ Get-MachineInfo $comps
 # 4. Rename the AD OU, e.g.:
 Rename-ADObject -Identity $oldOuDn -NewName $newOuName
 # Make sure to wait several seconds for the change to replicated across domain controllers before gpupdating computers:
-Start-Sleep -Seconds 15
+Start-Sleep -Seconds 30
 
 # 5. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
 # See: https://github.com/engrit-illinois/GpUpdate-Computer
