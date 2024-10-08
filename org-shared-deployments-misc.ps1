@@ -1079,19 +1079,11 @@ Rename-ADObject -Identity $oldOuDn -NewName $newOuName
 # Make sure to wait several seconds for the change to replicated across domain controllers before gpupdating computers:
 Start-Sleep -Seconds 30
 
-# 5. GpUpdate the computers so their MECM client picks up its new OU (in PS 7+):
+# 5. GpUpdate the computers so that they know about their new OU:
 # See: https://github.com/engrit-illinois/GpUpdate-Computer
 GpUpdate-Computer $comps
 
-# 6. Restart MECM agent on endpoints
-$comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
-
-# 7. Poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
-$test = Get-CMResource -ResourceType System -Fast
-$test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
-
-# Usually restarting the MECM service is enough to cause the MECM clients to update their MECM objects.
-# If any of the MECM objects still aren't updated with the new OU after several minutes, you can try running Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on clients.
+# 6. Run Discovery Data Collection (a.k.a. Heartbeat Discovery) cycle on the computers, so that their MECM client reports the new OU to MECM
 # https://www.anoopcnair.com/trigger-sccm-client-agent-actions-powershell/
 # https://learn.microsoft.com/en-us/mem/configmgr/develop/reference/core/clients/client-classes/triggerschedule-method-in-class-sms_client
 # https://learn.microsoft.com/en-us/powershell/module/cimcmdlets/invoke-cimmethod?view=powershell-7.4#parameters
@@ -1102,7 +1094,15 @@ $test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last
 # New CIM version:
 $comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { Invoke-CimMethod -Namespace 'root\ccm' -ClassName sms_client -MethodName TriggerSchedule -Arguments @{sScheduleID='{00000000-0000-0000-0000-000000000003}'} } }
 # You can also use the MECM console (or even better RCT) to do this.
+
+# 7. Give MECM a few minutes to process the discovery data and then poll MECM to check that the clients have updated their MECM objects with their new SystemOU value:
+$test = Get-CMResource -ResourceType System -Fast
+$test | Where { $_.Name -in $comps } | Sort Name | Select Name,@{N="OU";E={$last = $_.SystemOUName.count -1; $_.SystemOUName[$last]}}
+
+# If the Discovery Data Cycle wasn't enough you can try restarting the MECM service:
+$comps | ForEach-Object { Write-Host $_; Invoke-Command -ComputerName $_ -ScriptBlock { restart-service ccmexec } }
 # If you're still having trouble getting the MECM objects updated with the new SystemOU value, rebooting the offending machine will usually fix it.
+# For some unhealthy clients, you may need to push a client reinstall.
 
 # 8. Once you've confirmed MECM reports all of the objects' SystemOU property has been updated, then correct the collection membership rule:
 # Get the collection
@@ -1119,7 +1119,7 @@ $coll | Remove-CMDeviceCollectionQueryMembershipRule -RuleName $rule.RuleName -F
 $newQuery = ($rule.QueryExpression).Replace($oldOuName,$newOuName)
 $coll | Add-CMDeviceCollectionQueryMembershipRule -RuleName "$newOuName OU" -QueryExpression $newQuery
 
-# 9. Rename the collection:
+# 9. Rename the collection (if necessary):
 $newCollName = $oldCollName.Replace($oldOuName,$newOuName)
 $coll | Set-CMCollection -NewName $newCollName
 
