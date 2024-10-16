@@ -847,50 +847,12 @@ $comps.Name | ForEach-Object -ThrottleLimit 15 -Parallel {
 # Custom install scripts which will wait for external executables to finish before allowing the detection method to evaluate installation success
 # When Software Center "successfully" runs an install, but does not detect it afterward, it will report error 0x87d00324.
 
-# For executables which run for the entire installation process, simply pipe their output to something, like Out-Null.
-# This causes Powershell to wait for them to finish, in order to "capture" all the output.
-# https://stackoverflow.com/a/1742758
-.\setup.exe /parameter "value" | Out-Null
-
-# For executables/paths with spaces, you must use the call operator, so that PowerShell recognizes the first value as an executable, and not just an inert string:
-& ".\folder name\setup.exe" /parameter "value" | Out-Null
-
-# Alternatively you can use Start-Process -Wait. However this makes the syntax more complex and may not be compatible with every syntax, mostly due to quotation/escaping issues.
-Start-Process -Wait ".\setup.exe" -ArgumentList "/parameter value"
-
-# Another alternative is Wait-Process
-& ".\folder name\setup.exe" /parameter "value"
-Wait-Process -Name "setup"
-
-# For executables which kick off other executables, but do not wait for them to finish, you may need to implement a loop to identify and wait for the last executable in the line:
-while(Get-Process -Name "setup") {
-	Start-Sleep -Seconds 5
-}
-
-# Or, if the executable filename is somewhat generic, like "setup.exe", consider targeting the Description/display name instead:
-while(Get-Process | Where {$_.Description -eq "Visual Studio Installer"}) {
-	Start-Sleep -Seconds 5
-}
-
-# Here's an example of how to handle an (un)installer named "Uninstall.exe" which kicks off a secondary executable named "Un_A.exe" and then exits:
-# This comes from the uninstaller for Cura LulzBot Edition 3.6.23.
-# We pipe the parent executable to Out-Null to ensure that the child executable is running before we start waiting for it.
-# Otherwise the while loop will exit prematurely.
-& "C:\Program Files (x86)\cura-lulzbot 3.6\Uninstall.exe" /S | Out-Null
-while(Get-Process -Name "Un_A" -ErrorAction "SilentlyContinue") {
-    Write-Host "Uninstall running..."
-    Start-Sleep -Seconds 1
-}
-Write-Host "Uninstall finished."
+# Documentation moved here: https://uofi.atlassian.net/wiki/spaces/engritprivate/pages/266666713/Making+install+scripts+for+MECM+application+packages
 
 # -----------------------------------------------------------------------------
 
 # How to exit a script used as the install method for an application deployment type so that the exit code can actually be retrieved by SCCM
-# Custom exit codes can then be defined in the deployment type's "Return Codes" tab
-# https://www.reddit.com/r/SCCM/comments/ds1fnh/sending_exit_codes_to_cm_through_powershell/
-# https://stackoverflow.com/questions/50200325/returning-an-exit-code-from-a-powershell-script
-$host.SetShouldExit($exitcode)
-Exit $exitcode
+# Documentation moved here: https://uofi.atlassian.net/wiki/spaces/engritprivate/pages/266666713/Making+install+scripts+for+MECM+application+packages
 
 # -----------------------------------------------------------------------------
 
