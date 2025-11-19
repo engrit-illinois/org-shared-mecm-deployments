@@ -1076,3 +1076,14 @@ $matches | Sort "App","TS"
 
 # -----------------------------------------------------------------------------
 
+# Reinstall MECM client remotely on all endpoints in a collection
+# https://illinoisengrit.slack.com/archives/C0309SPFUKU/p1762983002305459
+$comps = Get-CMCollectionMember -CollectionName "UIUC-ENGR-Collection"
+$comps.Name | ForEach-Object -ThrottleLimit 10 -Parallel { 
+    if(Test-Connection $_ -IPv4 -Count 1 -Quiet) {
+        Install-CMClient -AlwaysInstallClient $true -ForceReinstall $true -SiteCode "MP1" -DeviceName $_
+    }
+}
+
+# -----------------------------------------------------------------------------
+
