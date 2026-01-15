@@ -1100,3 +1100,9 @@ $dupes | Select Count,Name | Sort Name
 
 # -----------------------------------------------------------------------------
 
+# Verify bulk MECM client reinstalls worked by reporting the last line of the ccmsetup.log on each machine:
+$comps = Get-ADComputer -Filter 'name -like "mel-101-*"'
+$comps | ForEach-Object { [PSCustomObject]@{ Computer = $_; LastLogLine = (Get-Content "\\$_\c$\windows\ccmsetup\logs\ccmsetup.log" -Tail 1) } }
+
+# -----------------------------------------------------------------------------
+
