@@ -1087,3 +1087,16 @@ $comps.Name | ForEach-Object -ThrottleLimit 10 -Parallel {
 
 # -----------------------------------------------------------------------------
 
+# Find MECM objects with duplicate names
+Prep-MECM
+$devices = Get-CMDevice -Resource -Fast
+$names = $devices | Select -ExpandProperty Name
+$names.count
+$uniqueNames = $names | Select -Unique
+$uniqueNames.count
+$dupes = $names | Group-Object | Where { $_.Count -gt 1 }
+$dupes.count
+$dupes | Select Count,Name | Sort Name
+
+# -----------------------------------------------------------------------------
+
