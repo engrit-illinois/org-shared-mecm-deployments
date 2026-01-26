@@ -1106,3 +1106,103 @@ $comps | ForEach-Object { [PSCustomObject]@{ Computer = $_; LastLogLine = (Get-C
 
 # -----------------------------------------------------------------------------
 
+# Include/remove given collection(s) into/from another given container collection
+# With handy wrapper for quickly including/removing given test VM collection
+
+function global:Include-CMCollectionInCollection {
+	param(
+		[string]$ContainerCollection,
+		[string[]]$IncludeCollections,
+		[switch]$UpdateMembership,
+		[int]$OperationDelaySecs = 10
+	)
+	
+	function log($msg) { Write-Host $msg }
+	
+	if(-not $IncludeCollections) {
+		Throw "-IncludeCollections was null!"
+	}
+	
+	if($IncludeCollections) {
+		if(@($IncludeCollections).count -lt 1) {
+			Throw "-IncludeCollections was empty!"
+		}
+	}
+	
+	Prep-MECM
+	
+	$IncludeCollections | ForEach-Object {
+		log "Adding rule to collection `"$ContainerCollection`" to include collection `"$_`"..."
+		try {
+			Add-CMDeviceCollectionIncludeMembershipRule -CollectionName $ContainerCollection -IncludeCollectionName $_ -ErrorAction "Stop"
+		}
+		catch {
+			Throw $_.Exception.Message
+		}
+		log "Waiting $OperationDelaySecs seconds..."
+		Start-Sleep -Seconds $OperationDelaySecs
+	}
+	
+	log "Updating membership of collection `"$ContainerCollection`"..."
+	Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	
+	log "EOF"
+}
+
+function global:Remove-CMCollectionFromCollection {
+	param(
+		[string]$ContainerCollection,
+		[string[]]$RemoveCollections,
+		[switch]$UpdateMembership,
+		[int]$OperationDelaySecs = 10
+	)
+	
+	function log($msg) { Write-Host $msg }
+	
+	if(-not $RemoveCollections) {
+		Throw "-RemoveCollections was null!"
+	}
+	
+	if($RemoveCollections) {
+		if(@($RemoveCollections).count -lt 1) {
+			Throw "-RemoveCollections was empty!"
+		}
+	}
+	
+	Prep-MECM
+	
+	$RemoveCollections | ForEach-Object {
+		log "Removing rule from collection `"$ContainerCollection`" which included collection `"$_`"..."
+		try {
+			Remove-CMDeviceCollectionIncludeMembershipRule -CollectionName $ContainerCollection -IncludeCollectionName $_ -Force -ErrorAction "Stop"
+		}
+		catch {
+			Throw $_.Exception.Message
+		}
+		log "Waiting $OperationDelaySecs seconds..."
+		Start-Sleep -Seconds $OperationDelaySecs
+	}
+	
+	log "Updating membership of collection `"$ContainerCollection`"..."
+	Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	
+	log "EOF"
+}
+
+function global:Include-TestVmsInCollection {
+	param(
+		[string]$ContainerCollection,
+		[string]$TestVmsCollection = "UIUC-ENGR-IS mseng3 Test VMs"
+	)
+	Include-CMCollectionInCollection -ContainerCollection $ContainerCollection -IncludeCollections $TestVmsCollection
+}
+
+function global:Remove-TestVmsFromCollection {
+	param(
+		[string]$ContainerCollection,
+		[string]$TestVmsCollection = "UIUC-ENGR-IS mseng3 Test VMs"
+	)
+	Remove-CMCollectionFromCollection -ContainerCollection $ContainerCollection -RemoveCollections $TestVmsCollection
+}
+
+# -----------------------------------------------------------------------------
