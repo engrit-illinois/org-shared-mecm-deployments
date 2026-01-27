@@ -1106,14 +1106,99 @@ $comps | ForEach-Object { [PSCustomObject]@{ Computer = $_; LastLogLine = (Get-C
 
 # -----------------------------------------------------------------------------
 
-# Include/remove given collection(s) into/from another given container collection
+# Include/remove given collection(s)/device(s) into/from a given container collection
 # With handy wrapper for quickly including/removing given test VM collection
+
+function global:Include-CMDeviceInCollection {
+	param(
+		[string]$ContainerCollection,
+		[string[]]$IncludeDevices,
+		[switch]$SkipMembershipUpdate,
+		[int]$OperationDelaySecs = 10
+	)
+	
+	function log($msg) { Write-Host $msg }
+	
+	if(-not $IncludeDevices) {
+		Throw "-IncludeDevices was null!"
+	}
+	
+	if($IncludeDevices) {
+		if(@($IncludeDevices).count -lt 1) {
+			Throw "-IncludeDevices was empty!"
+		}
+	}
+	
+	Prep-MECM
+	
+	$IncludeDevices | ForEach-Object {
+		log "Adding rule to collection `"$ContainerCollection`" to include device `"$_`"..."
+		$device = Get-CMDevice -Fast -Name $_ -Resource
+		try {
+			Add-CMDeviceCollectionDirectMembershipRule -CollectionName $ContainerCollection -ResourceId $device.ResourceId -ErrorAction "Stop"
+		}
+		catch {
+			Throw $_.Exception.Message
+		}
+		log "Waiting $OperationDelaySecs seconds..."
+		Start-Sleep -Seconds $OperationDelaySecs
+	}
+	
+	if(-not $SkipMembershipUpdate) {
+		log "Updating membership of collection `"$ContainerCollection`"..."
+		Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	}
+	log "EOF"
+}
+
+function global:Remove-CMDeviceFromCollection {
+	param(
+		[string]$ContainerCollection,
+		[string[]]$RemoveDevices,
+		[switch]$SkipMembershipUpdate,
+		[int]$OperationDelaySecs = 10
+	)
+	
+	function log($msg) { Write-Host $msg }
+	
+	if(-not $RemoveDevices) {
+		Throw "-RemoveDevices was null!"
+	}
+	
+	if($RemoveDevices) {
+		if(@($RemoveDevices).count -lt 1) {
+			Throw "-RemoveDevices was empty!"
+		}
+	}
+	
+	Prep-MECM
+	
+	$RemoveDevices | ForEach-Object {
+		log "Removing rule from collection `"$ContainerCollection`" which included device `"$_`"..."
+		$device = Get-CMDevice -Fast -Name $_ -Resource
+		try {
+			Remove-CMDeviceCollectionDirectMembershipRule -CollectionName $ContainerCollection -ResourceId $device.ResourceId -Force -ErrorAction "Stop"
+		}
+		catch {
+			Throw $_.Exception.Message
+		}
+		log "Waiting $OperationDelaySecs seconds..."
+		Start-Sleep -Seconds $OperationDelaySecs
+	}
+	
+	if(-not $SkipMembershipUpdate) {
+		log "Updating membership of collection `"$ContainerCollection`"..."
+		Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	}
+	
+	log "EOF"
+}
 
 function global:Include-CMCollectionInCollection {
 	param(
 		[string]$ContainerCollection,
 		[string[]]$IncludeCollections,
-		[switch]$UpdateMembership,
+		[switch]$SkipMembershipUpdate,
 		[int]$OperationDelaySecs = 10
 	)
 	
@@ -1143,8 +1228,10 @@ function global:Include-CMCollectionInCollection {
 		Start-Sleep -Seconds $OperationDelaySecs
 	}
 	
-	log "Updating membership of collection `"$ContainerCollection`"..."
-	Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	if(-not $SkipMembershipUpdate) {
+		log "Updating membership of collection `"$ContainerCollection`"..."
+		Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	}
 	
 	log "EOF"
 }
@@ -1153,7 +1240,7 @@ function global:Remove-CMCollectionFromCollection {
 	param(
 		[string]$ContainerCollection,
 		[string[]]$RemoveCollections,
-		[switch]$UpdateMembership,
+		[switch]$SkipMembershipUpdate,
 		[int]$OperationDelaySecs = 10
 	)
 	
@@ -1183,8 +1270,10 @@ function global:Remove-CMCollectionFromCollection {
 		Start-Sleep -Seconds $OperationDelaySecs
 	}
 	
-	log "Updating membership of collection `"$ContainerCollection`"..."
-	Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	if(-not $SkipMembershipUpdate) {
+		log "Updating membership of collection `"$ContainerCollection`"..."
+		Invoke-CMDeviceCollectionUpdate -Name $ContainerCollection -ErrorAction "Stop"
+	}
 	
 	log "EOF"
 }
