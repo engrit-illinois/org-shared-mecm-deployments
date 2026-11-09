@@ -277,19 +277,7 @@ $collsWhichIncludeTargetColl | Sort-Object | Format-Table -Autosize -Wrap
 # Find all deployments to a target collection (including deployments that are "inherited" by virtue of the target collection being included in other collections):
 # https://configurationmanager.uservoice.com/forums/300492-ideas/suggestions/15827071-collection-deployment
 
-$targetColl = "UIUC-ENGR-Target Collection"
-$targetCollId = (Get-CMCollection -Name $targetColl).CollectionId
-
-$collsWhichIncludeTargetColl = @()
-Get-CMCollection -CollectionType Device | Foreach-Object {
-    $thisColl = $_
-    Get-CMCollectionIncludeMembershipRule -InputObject $thisColl | Where-Object { $_.IncludeCollectionId -eq $targetCollId } | Foreach-Object { $collsWhichIncludeTargetColl += $thisColl.Name }
-}
-
-$depsToCollsWhichIncludeTargetColl = @()
-#TODO
-
-$depsToCollsWhichIncludeTargetColl | Sort-Object | Format-Table -Autosize -Wrap
+# This was turned into an optional parameter on https://github.com/engrit-illinois/Get-CMCollsWhichIncludeColl
 
 # -----------------------------------------------------------------------------
 
